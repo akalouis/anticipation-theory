@@ -129,7 +129,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AnticipationTheory.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="coin_toss_game.ixx" />
     <ClCompile Include="game.ixx" />
     <ClCompile Include="hpgame_rage.ixx" />
