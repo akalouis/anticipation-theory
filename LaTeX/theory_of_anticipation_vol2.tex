@@ -1,0 +1,83 @@
+\documentclass{article}
+\usepackage{arxiv}
+\usepackage{amsmath}      % For math
+\usepackage{amssymb}      % For math symbols
+\usepackage{kotex}        % For Korean
+\usepackage{hyperref}     % For clickable links in PDF
+
+\usepackage{amsthm}
+\newtheorem{definition}{Definition}[]
+\newtheorem{example}{Example}[]
+
+\title{\textbf{theory of anticipation}\\[3mm] 
+       \large volume i:\\[2mm]
+       formulation of fun as anticipation and its local form}
+	   
+\author{Jeeheon (Lloyd) Oh$^{1}$\\
+\small{$^{1}$Research Division, Farseer Co., Ltd., Seoul, Republic of Korea}\\
+\small{\texttt{aka.louis@outlook.com}}
+}
+
+\renewcommand{\shorttitle}{Theory of Anticipation Volume: I}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+abstract
+\end{abstract}
+
+\keywords{Game Theory \and Mathematical Optimization \and Player Psychology \and Decision Theory \and Entertainment Computing \and Behavioral Game Theory}
+
+\section{Background and Motivation}
+
+\section{Introduction to Theory of Anticipation}
+
+\section{Mathematical Framework}
+
+\subsection{Core Components}
+\subsection{Multi-Turn Anticipation}
+
+\subsubsection{Global Desire}
+Modern player-versus-player (PvP) games are typically complex multi-turn games in which game sessions persist over time, and the game state evolves continuously. The local desire function, \( D_{local}(s) \), is insufficient to fully capture the dynamics of these multi-turn games, as it only considers the intrinsic desirability of a state at a single point in time. To address this, we introduce the global desire function, \( D_{global}(s) \), which models the expected desirability of a state over multiple turns by incorporating both future states and transition probabilities.
+
+The global desire is computed using a backpropagation method, akin to dynamic programming, which aggregates the desirability of future states to compute a player's overall desire for a given state \( s \). This approach ensures that the desirability of a state reflects not only its immediate value but also its long-term significance in the evolving game state.
+
+While \( D_{global}(s) \) is essential for understanding the dynamics of multi-turn games, this volume primarily focuses on the single-turn formulation. Readers can consider this section as an introduction to concepts that will be explored in greater detail in future volumes.
+
+\begin{definition}[Global Desire]
+The global desire function backpropagates desirability from future states. Circular dependencies are avoided in the Theory of Anticipation, ensuring that the process converges. The global desire for a state \( s \) is given by:
+\[
+D_{global}(s) = D_{local}(s) + \sum_{t \in T_s} \left[ P(t) \times D_{global}(t.s) \right]
+\]
+\end{definition}
+
+\subsubsection{Perspective Desire}
+While \( D_{global}(s) \) reflects the overall desirability of reaching state \( s \) from an initial state \( s_{\text{initial}} \), players evaluate transitions based on their current state in the game. To capture this, we introduce the concept of **Perspective Desire**, which measures how desirable a transition is from the player’s current state.
+
+\begin{definition}[Perspective Desire]
+For a transition \( t = (s_1 \rightarrow s_2) \), the perspective desire is defined as the difference in the global desires of the two states:
+\[
+D_{perspective}(t) = D_{global}(s_2) - D_{global}(s_1)
+\]
+\end{definition}
+
+This formulation reflects the intuitive notion that players are less likely to desire transitions to states that are perceived as less desirable than their current state. A transition is only desirable if it leads to a state with a higher global desire.
+
+\subsubsection{Anticipation}
+\begin{definition}[Anticipation in Multi-Turn Games]
+    For a state \( s \) with possible transitions \( T_s \), anticipation $A_{global}(s)$ is:
+    \[
+        \mu_s = \sum_{t \in T_s} P(t) \times D_{perspective}(t)
+    \]
+    \[
+        A_{global}(s) = \sqrt{\sum_{t \in T_s} P(t) \times (D_{perspective}(t) - \mu_s)^2}
+    \]
+\end{definition}
+
+This multi-turn version of anticipation captures the player's engagement throughout a game session by modeling how players predict and respond to future outcomes.
+    
+
+\section{Future Work}
+
+\end{document}

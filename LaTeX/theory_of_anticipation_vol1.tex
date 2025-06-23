@@ -1,0 +1,397 @@
+\documentclass{article}
+\usepackage{arxiv}
+\usepackage{amsmath}      % For math
+\usepackage{amssymb}      % For math symbols
+\usepackage{kotex}        % For Korean
+\usepackage{hyperref}     % For clickable links in PDF
+
+\usepackage{amsthm}
+\newtheorem{definition}{Definition}[]
+\newtheorem{example}{Example}[]
+\newtheorem{theorem}{Theorem}[]
+\newcounter{gameproblem}
+\newenvironment{gameproblem}[1]{%
+    \refstepcounter{gameproblem}%
+    \noindent\textbf{Problem \thegameproblem: #1}: %
+}{%
+    \par\smallskip%
+}
+\title{\textbf{theory of anticipation}\\[3mm] 
+       \large volume i:\\[2mm]
+       formulation of fun as anticipation and its local form}
+	   
+\author{Jeeheon (Lloyd) Oh$^{1}$\\
+\small{$^{1}$Research Division, Farseer Co., Ltd., Seoul, Republic of Korea}\\
+\small{\texttt{aka.louis@outlook.com}}
+}
+
+\renewcommand{\shorttitle}{Theory of Anticipation Volume: I}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+The quantification of engagement in interactive entertainment has long been considered intractable due to its inherently subjective nature. We present the Theory of Anticipation (ToA), demonstrating that engagement can be mathematically formulated as anticipation—the weighted standard deviation of meaningful outcomes. Despite its computational simplicity, ToA's emergent properties align remarkably with established phenomena in player psychology and industry practices, from the compelling nature of gambling mechanics to the fundamental role of uncertainty in entertainment value.
+
+The complete ToA framework encompasses local, global, and nested anticipation forms. Most notably, ToA reveals a hierarchical structure in anticipation that produces sequential component values (A₁, A₂, A₃, ...), with each component corresponding to distinct engagement types ranging from immediate excitement to narrative and strategic engagement. This hierarchical decomposition enables precise examination and optimization of both immediate action-packed engagement and long-term strategic engagement, serving as a core mathematical tool for game designers.
+
+In this volume, we establish Local Anticipation through a single formula that serves as the fundamental foundation for the entire ToA framework, from which extensions to global and nested forms emerge naturally through mathematical progression.
+
+Specifically, we present the foundational local anticipation formula, formally analyze Rock-Paper-Scissors and Coin Toss games within the ToA framework, and prove that binary high-stakes gambling represents the optimal form of single-turn games for maximizing anticipation.
+
+To our knowledge, these results establish the first rigorous mathematical foundation for quantitative game design analysis. We argue that this work has the potential to open an entirely new field of research by providing the first objective and rigorous mathematical framework for entertainment design optimization, enabling systematic analysis and optimization strategies that extend beyond traditional intuitive, playtesting-driven design practices.
+
+\end{abstract}
+
+\keywords{Game Theory \and Mathematical Optimization \and Player Psychology \and Decision Theory \and Entertainment Computing \and Behavioral Game Theory}
+
+\section{Background and Motivation}
+
+The game industry faces a critical challenge: despite massive investments, successful new games in established genres are becoming increasingly rare. This challenge manifests most clearly in the MOBA genre, where League of Legends has maintained dominance for over a decade while numerous well-funded competitors have failed to capture meaningful market share.
+
+Traditional game design has long relied on iterative testing and refinement, an approach that proved effective when development costs remained manageable and markets accepted longer development cycles. The MOBA genre itself evolved from Aeon of Strife to Dota 2 through a decade of community-driven iteration, effectively representing the accumulated game design expertise of an entire generation. However, modern game development environments can no longer sustain this level of long-term design investment. Today's studios operate with monthly costs that frequently exceed millions of dollars, creating unsustainable pressure for rapid market success.
+
+This fundamental economic shift has produced two critical industry-wide problems. Games increasingly fail after launch despite receiving positive feedback during alpha testing, suggesting serious flaws in current evaluation methodologies. Simultaneously, developers have begun defaulting to combinations of proven mechanics rather than pursuing novel engagement patterns, resulting in genre saturation without meaningful innovation.
+
+These challenges stem from a fundamental limitation in the industry's ability to evaluate game design decisions before committing to implementation. Current evaluation methods suffer from significant constraints. Designer intuition, while valuable, has reached its practical limits in today's saturated and complex market environment. Empirical testing through playtesting requires substantial resource investment and typically occurs too late in the development process to enable fundamental design modifications.
+
+Both designer intuition and empirical testing have shown diminishing effectiveness over time. They demand expensive real implementation before providing useful feedback, remain fundamentally subjective and intuition-based rather than mathematical, and deliver post-hoc analysis instead of predictive guidance. This forces development teams to commit significant resources before understanding whether their design concepts will achieve market success. The combination of these economic realities and methodological limitations has created substantial barriers that effectively prevent genuinely novel and commercially viable game designs from emerging.
+
+The Theory of Anticipation directly addresses this fundamental gap by providing quantitative, mathematical decision-making capabilities that operate independently of traditional expensive prototyping requirements. ToA enables mathematical optimization and comprehensive evaluation before implementation, establishing a rigorous analytical foundation for strategic investment decisions. The framework delivers objective metrics for comparing design alternatives before implementation, allowing development teams to validate creative concepts without committing substantial development resources.
+
+ToA represents a significant breakthrough in systematic entertainment design analysis. This paper establishes the theory's foundational principles through rigorous mathematical proofs and practical applications, creating the academic framework necessary for quantitative game design optimization and strategic innovation.
+
+\section{Introduction to Theory of Anticipation}
+
+The Theory of Anticipation (ToA) is a computational framework that calculates anticipation values for each game state. We demonstrate that anticipation is mathematically equivalent to player engagement. The framework defines games through their state spaces, transitions, and probabilities, then computes anticipation values for every state. This approach can represent any game design, from single-turn card games to complex multi-turn MOBA games.
+
+ToA operates across three hierarchical levels, where local anticipation handles single-step games and forms the theoretical foundation.
+Global anticipation extends to multi-step games that unfold over time. Nested anticipation computes anticipation recursively by setting the current anticipation as a new desire value, producing anticipation components A₁, A₂, A₃, and subsequent terms.
+
+These components represent distinct engagement dimensions within game experiences. A₁ captures immediate tactical excitement, while A₂ addresses strategic dynamics and planning elements. Lower-order components indicate immediate action-oriented engagement, whereas higher-order components reflect narrative depth, strategic complexity, and long-term player investment patterns.
+
+ToA requires two fundamental inputs for operation:
+
+\begin{itemize}
+   \item Definition of Game (states, transitions)
+   \item Desire Values (typically 1 for win conditions, 0 for all other states)
+\end{itemize}
+
+The first input consists of complete game definition described through states and transitions between states. The second input comprises intrinsic desire values, which typically assign one to win conditions and zero to all other states. All anticipation values are then computed automatically for all game states through the unified mathematical formulation.
+
+This binary approach completely eliminates subjectivity from the analysis while maintaining flexibility for customization. For example, one can customize to give additional desire values for scoring a kill.
+
+In practical application, designers compute anticipation values for all game states from each player's perspective throughout the complete gaming experience. The averaged anticipation value across all states becomes the Game Design Score, providing an objective metric for optimization and comparison across different design approaches.
+
+This framework enables targeted design analysis through multiple dimensions. Designers can identify the most engaging moments within their games, locate problematic low-engagement states that require optimization, and examine individual anticipation components to strengthen specific design elements. For example, if A₁ values are consistently high while A₅ values remain low across game states, this indicates strong immediate engagement but insufficient narrative depth. This diagnostic capability allows designers to determine precisely whether immediate excitement, strategic depth, or narrative engagement requires targeted improvement.
+
+\section{Theory of Anticipation}
+\subsection{Preliminaries}
+Let $\mathbb{R}$ denote the set of real numbers and $[0,1]$ the closed interval from 0 to 1. Throughout this paper, we use lowercase letters (e.g., $s$) to denote states, uppercase letters (e.g., $S$) to denote sets, and calligraphic letters (e.g., $\mathbb{S}$) to denote spaces. Probability functions are denoted by $P$, and transitions between states are written as $s_1 \rightarrow s_2$.
+For any given state $s$, we use $S_{\text{next}}(s)$ to denote the set of possible next states reachable from $s$. When clear from context, we may abbreviate this as $S_2$ when discussing transitions from a state $s_1$.
+\subsection{Definition of Game}
+\begin{definition}[Definition of Game]
+ToA defines a game as a tuple $(\mathbb{S}, T, T_s, P)$ consisting of:
+\begin{itemize}
+\item A state space $\mathbb{S}$ containing all valid game states
+\item A transition space $T \subseteq \mathbb{S} \times \mathbb{S}$
+\item For each state $s \in \mathbb{S}$, a set of available transitions $T_s \subseteq T$
+\item A transition probability function $P: T \rightarrow [0,1]$
+\end{itemize}
+satisfying:
+\begin{equation*}
+T \subseteq \mathbb{S} \times \mathbb{S} \quad \text{(all possible transitions)}
+\end{equation*}
+\begin{equation*}
+T_s \subseteq T, \quad \forall s \in \mathbb{S} \quad \text{(transitions available from state $s$)}
+\end{equation*}
+\begin{equation*}
+P(t) \in [0,1], \quad \forall t \in T \quad \text{(transition probabilities)}
+\end{equation*}
+\begin{equation*}
+\sum_{t \in T_s} P(t) = 1, \quad \forall s \in \mathbb{S} \quad \text{(probability sum constraint)}
+\end{equation*}
+\end{definition}
+This definition provides a complete mathematical description of any game's structure and dynamics. The state space $\mathbb{S}$ captures all possible configurations of the game, while transitions $T$ and their probabilities $P$ describe how the game evolves over time.
+
+\subsection{Single-Step Games}
+
+\subsubsection{Local Desire}
+The foundation of ToA rests on the local desire function $D_{local}(s)$, which assigns fundamental desirability values to game states. We adopt a minimalistic binary approach:
+
+\begin{definition}[Local Desire]
+The local desire function $D_{local}: \mathbb{S} \rightarrow \mathbb{R}$ assigns base desirability values to states:
+\[
+D_{local}(s) =
+\begin{cases}
+    1 & \text{for win conditions} \\
+    0 & \text{otherwise}
+\end{cases}
+\]
+\end{definition}
+
+This binary valuation serves as a complete foundational input, eliminating subjectivity while capturing essential game dynamics. While more nuanced valuations are possible, this minimal formulation proves sufficient for deriving key properties of player engagement.
+
+\begin{example}[Customized Local Desire]
+For specific applications, the local desire function can be extended to:
+\[
+D_{local}(s) =
+\begin{cases}
+1 & \text{for win conditions} \\
+> 0 & \text{for desirable states} \\
+0 & \text{for neutral states} \\
+< 0 & \text{for undesirable states}
+\end{cases}
+\]
+\end{example}
+
+\subsubsection{Local Anticipation}
+The core innovation of ToA lies in its formulation of anticipation as a measure of engagement. For single-step games, we define anticipation as the weighted standard deviation of possible outcomes:
+\begin{definition}[Local Anticipation]
+For a state $s$, local anticipation is defined as:
+\[
+\mu = \sum_{s' \in S_{\text{next}}(s)} P(s \rightarrow s') \times D_{local}(s')
+\]
+\[
+A(s) = \sqrt{\sum_{s' \in S_{\text{next}}(s)} P(s \rightarrow s') \times (D_{local}(s') - \mu)^2}
+\]
+where $\mu$ represents the expected desire.
+\end{definition}
+
+\subsection{Multi-Step Games}
+While local anticipation provides powerful insights for single-step games, most modern games involve sequences of decisions and state transitions. The global version of anticipation, developed in Volume II, extends the framework to multi-step scenarios by incorporating future state trajectories into the anticipation calculation.
+For a state $s$, global anticipation considers not just immediate transitions but the full graph of possible future states, weighted by their probability and temporal distance. This extension enables analysis of complex game mechanics while maintaining the mathematical properties established for local anticipation.
+
+\subsection{Higher-Order Anticipation}
+The theory culminates in the concept of nested anticipation, where anticipation itself becomes a source of desire. This recursive formulation captures how players not only seek engaging moments but also anticipate the uncertainty of when these moments will occur.
+Formally, this creates a hierarchy of anticipation functions $A_1, A_2, A_3$, ... where each level treats the previous level's anticipation as its desire function. This powerful extension explains complex phenomena in player psychology and will be fully developed in subsequent volumes.
+
+Traditional quantification models fail when players "solve" games - as game understanding increases, expected variance of anticipation decreases, making the game "boring". This recursive nature of engagement had made fun seem mathematically intractable, but ToA's hierarchical structure naturally captures it through nested anticipation.
+
+With this nested formulation, we can decompose anticipation into hierarchical components $A_1, A_2, A_3$, ..., revealing that engagement was inherently multi-leveled.
+This gained perspective of optimizing each level of anticipation hierarchy will provide unprecedented insight into game design and player psychology. Total engagement emerges as the sum of these hierarchical anticipations, separating components that previous approaches conflated. This powerful extension will be fully explored in subsequent volumes.
+
+\section{Observations and Understandings}
+
+The Theory of Anticipation emerges from fundamental observations that reveal the mathematical nature of engagement. These discoveries establish the empirical foundation that necessitates the weighted standard deviation formulation.
+
+\subsection{State And Desire Provide No Engagement}
+
+A paused game generates zero engagement regardless of state desirability, revealing one notable property on modeling of engagement. Consider this thought experiment:
+
+\begin{gameproblem}{Paused Game Problem}
+During a competitive match, you achieve a commanding lead through superior positioning and resource management. You have successfully leveled up and reached a highly desirable state, carrying the game as intended. You definitively want to be in that state.
+Now imagine being brought to that exact state, then the game pauses indefinitely. It never unfreezes and remains in that state forever. No meaningful events will ever occur again. Now, the game suddenly provides no engagement despite occupying the most desirable position.
+\end{gameproblem}
+
+This contradicts common intuition that desirable states generate engagement. Analyzing and arguing the mechanics of this problem reveals that engagement cannot originate from static state evaluation, establishing that any mathematical model must look beyond state desirability.
+
+\subsection{Engagement Emerges From Transitions}
+
+Engagement emerges exclusively from state transitions, not from states themselves. This understanding resolves the paused game paradox. The paused game is not fun, because there will be no meaningful transitions left. Players would perceive that game as concluded, not an active game.
+
+Consider these cases where engagement vanishes despite active gameplay: When victory becomes guaranteed with absolute certainty, the game generates no engagement regardless of how favorable the situation appears. When defeat becomes inevitable, engagement similarly disappears despite ongoing actions. When an ingame event begins and you already know that nothing meaningful changes will happen in resources, health, or positioning, the event will provide no engagement.
+
+In all cases, the absence of meaningful transitions eliminates engagement. If there is no uncertainty about future outcomes, the game becomes predetermined and loses all entertainment value.
+
+This reveals that engagement stems from the variance of potential future transitions, not from state and desirability. Players experience engagement when facing uncertain outcomes with different values, regardless of their present situation. The mathematical model must therefore measure transition uncertainty rather than evaluate static state properties.
+\subsection{Engagement Comes From Variance}
+
+The paused game problem demonstrates that desirability does not equal engagement. Even winning states provide no engagement when transitions are eliminated. This principle extends to reveal a fundamental characteristic: the absolute values of desires do not determine engagement levels.
+
+\begin{gameproblem}{Penalty-Only Game State}
+Consider a penalty-only game state where you must choose between losing 10 points with 90 percent probability or losing 100 points with 10 percent probability. Despite all outcomes representing losses, the uncertainty regarding which penalty will occur creates measurable engagement. You do not want to enter such a state, yet from within that state, the situation remains engaging because you must monitor which outcome will materialize.
+\end{gameproblem}
+
+This reveals that engagement stems from outcome uncertainty rather than outcome desirability. When there exists a state with penalty-only transitions, the uncertainty of which penalty will occur generates engagement despite the undesirable nature of being in that state. This demonstrates that the variance between potential outcomes drives engagement, even when all outcomes are undesirable.
+
+These findings establish that neither the average desirability nor the absolute values of outcomes determine engagement levels. The mathematical spread between possible outcomes creates engagement regardless of whether those outcomes represent gains or losses. Therefore, measurement of engagement might utilize variance rather than bias or sign of respective states desire value. This principle forms the foundation for understanding that engagement emerges from uncertainty rather than from the inherent value of game states or outcomes.
+
+\subsection{Mathematical Derivation of Local Anticipation}
+
+Having established that variance in outcomes drives engagement, standard deviation appears to be the logical mathematical tool for measuring this variance. However, standard deviation in its traditional form proves inadequate because it assumes equal probability for all outcomes. Game states require consideration of varying transition probabilities, which standard deviation does not incorporate.
+
+We evaluated formulations and validated their performance across diverse game models and states. Analysis revealed that probability-weighted standard deviation most accurately represents engagement across all examined game states. The mathematical formulation is:
+
+\begin{equation}
+\mu = \sum_{i} p_i \times d_i
+\end{equation}
+\begin{equation}
+A = \sqrt{\sum_{i} p_i \times (d_i - \mu)^2}
+\end{equation}
+
+Where $p_i$ represents the probability of outcome $i$, $d_i$ represents the desire value of outcome $i$, and $\mu$ represents the expected desire value weighted by probability.
+
+\subsection{Engagement = Anticipation}
+
+Traditionally, game designers relied on intuitions about engagement, assuming that fun stems from achieving favorable states, progressing toward goals, or experiencing rewarding gameplay mechanics. Fun and engagement were treated as subjective and non-measurable phenomena, leaving the industry without mathematical tools for systematic analysis.
+
+However, we now have a formulation that matches all of the observations and intuitions we discussed about player engagement. Analysis of this formulation reveals that engagement represents a fundamentally equivalent concept to anticipation.
+
+The probability-weighted standard deviation measures uncertainty about future outcomes, which constitutes anticipation by definition. This establishes the theoretical foundation for the Theory of Anticipation, demonstrating that what designers call engagement can be measured objectively through anticipation quantification.
+
+\section{Experimentation: Rock-Paper-Scissors Game}
+
+We demonstrate the practical application of the Theory of Anticipation framework through formal analysis of Rock-Paper-Scissors, establishing this classic game as a benchmark for single-step engagement measurement. This analysis provides concrete validation of the local anticipation formula while illustrating the framework's diagnostic capabilities.
+
+\subsection{Game Model Specification}
+
+The Rock-Paper-Scissors implementation operates within the ToA framework through the following formal specification. The state space $\mathbb{S}$ contains exactly four distinct states: the initial decision state $s_1$ where $\text{is\_initial} = \text{true}$, and three terminal states representing Win ($s_2$), Draw ($s_3$), and Loss ($s_4$) outcomes where $\text{is\_initial} = \text{false}$.
+
+The transition space $T$ defines three possible transitions from the initial state to each terminal outcome: $t_1: s_1 \rightarrow s_2$, $t_2: s_1 \rightarrow s_3$, and $t_3: s_1 \rightarrow s_4$. Terminal states contain no outgoing transitions, confirming the single-step nature of this game design.
+
+The transition probability function $P$ assigns equal probability to each outcome: $P(t_1) = P(t_2) = P(t_3) = \frac{1}{3}$. This probability distribution reflects either random opponent behavior or optimal mixed strategy equilibrium conditions.
+
+\subsection{Intrinsic Desire Function}
+
+The intrinsic desire function $D_{local}$ applies strict binary valuation according to competitive gaming principles:
+
+\[
+D_{local}(s) = \begin{cases}
+1.0 & \text{if } \neg s.\text{is\_initial} \land s.\text{result} = \text{Win} \\
+0.0 & \text{otherwise}
+\end{cases}
+\]
+
+This specification assigns desire values as follows: $D_{local}(s_1) = 0.0$ for the initial state, $D_{local}(s_2) = 1.0$ for the Win state, $D_{local}(s_3) = 0.0$ for the Draw state, and $D_{local}(s_4) = 0.0$ for the Loss state. This formulation treats draws as equivalent to losses from an engagement perspective, reflecting competitive gaming psychology where only victory provides satisfaction.
+
+\subsection{Anticipation Calculation}
+
+Applying the local anticipation formula to the initial state $s_1$, we calculate the expected desire value:
+
+\[
+\mu = \sum_{s' \in S_{\text{next}}(s_1)} P(s_1 \rightarrow s') \times D_{local}(s')
+\]
+
+\[
+\mu = \frac{1}{3} \times 1.0 + \frac{1}{3} \times 0.0 + \frac{1}{3} \times 0.0 = 0.333
+\]
+
+The local anticipation calculation follows:
+
+\[
+A(s_1) = \sqrt{\sum_{s' \in S_{\text{next}}(s_1)} P(s_1 \rightarrow s') \times (D_{local}(s') - \mu)^2}
+\]
+
+\[
+A(s_1) = \sqrt{\frac{1}{3} \times (1.0 - 0.333)^2 + \frac{1}{3} \times (0.0 - 0.333)^2 + \frac{1}{3} \times (0.0 - 0.333)^2}
+\]
+
+\[
+A(s_1) = \sqrt{\frac{1}{3} \times 0.4449 + \frac{2}{3} \times 0.1111} = \sqrt{0.2224} = 0.471
+\]
+
+\subsection{Results and Framework Validation}
+
+The computational analysis confirms the theoretical calculation with precision, yielding an anticipation value of $A(s_1) = 0.471$ for the initial state. This represents 94.2\% efficiency relative to the theoretical maximum of 0.5 for binary single-step games, indicating near-optimal design within the constraint parameters.
+
+The game design score of 0.471 demonstrates exceptional immediate engagement potential. The analysis reveals exclusively $A_1$ component activity with zero values for $A_2$ through $A_5$, confirming the game's nature as a pure single-step experience without strategic depth or narrative elements extending beyond immediate outcomes.
+
+These results validate several critical aspects of the Theory of Anticipation framework. Rock-Paper-Scissors achieves near-optimal engagement through balanced probability distribution combined with meaningful outcome differentiation. The high efficiency rating indicates minimal room for improvement within single-step game constraints, suggesting this game represents an evolved optimal form for its category. The framework's ability to distinguish between different engagement dimensions is confirmed through the exclusive $A_1$ component activity, accurately reflecting the absence of strategic planning elements or narrative progression beyond immediate tactical outcomes.
+
+\section{Experimentation: Coin Toss Game}
+\section{Optimal form of single-step game: High Stake Gambling}
+[Argue of optimality What is an optimal single step game?]]
+Proof of optimally engaging game(high stake gamble) as optimal single step game
+
+\subsubsection{Properties of Local Anticipation}
+Local anticipation exhibits several key mathematical properties that validate its use as a measure of engagement:
+\begin{theorem}[Bounds of Local Anticipation]
+For any state $s$ with binary local desires, $A(s) \in [0, 0.5]$.
+\end{theorem}
+\begin{proof}
+Given binary desires (0 or 1), the maximum variance occurs with equal probability of extreme outcomes. With $p$ denoting the probability of a desired outcome:
+[
+$\mu = p \cdot 1 + (1-p) \cdot 0 = p$
+]
+[
+$A^2 = p(1-p)^2 + (1-p)(0-p)^2 = p(1-p)$
+]
+This quadratic expression reaches its maximum at $p=0.5$, yielding $A_{max}=0.5$.
+\end{proof}
+\begin{theorem}[Monotonicity Under Stakes]
+For equivalent probability distributions, higher stake outcomes (larger differences in $D_{local}$ values) produce proportionally higher anticipation.
+\end{theorem}
+
+\section{Future Work}
+Here we explore ToA as MOBA game design tool, but we recognize its potential as a universal tool for all entertainment contents and further researches into such direction will also be very promising.
+
+\section{Past Work}
+GameFlow
+
+
+\subsection{Multi-Step Game Extension}
+
+We have discussed single-step games thus far, however most entertainment involves multi-step experiences where audiences navigate through sequences of state transitions within each instance.
+
+This extends naturally and efficiently with $O(1)$ complexity using dynamic programming. To compute anticipation in multi-step scenarios, we backpropagate desire values from terminal states through the entire state graph.
+
+First, set intrinsic binary desires (1 for win and 0 for all others). Then backpropagate according to transition definitions. This computes the exact desire value for each state.
+
+The problem then reduces to Local Anticipation calculations, allowing application of the derived formula at each state.
+
+\subsection{"The Games Getting Old Problem"}
+
+ToA appears to face a subjectivity challenge. One can argue that coin toss games provide no sustained enjoyment despite theoretical optimality.
+
+Even theoretically optimal games become boring through repeated play. Coin toss, proven to achieve maximum single-step anticipation of $A = 0.5$, loses all appeal after sufficient repetition. This creates a fundamental paradox: if ToA correctly identifies optimal engagement, why do optimal games become unengaging?
+
+The resolution recognizes that human learning systems adapt to predictable patterns. As players internalize game mechanics, previously uncertain transitions become deterministic from the player's perspective, eliminating the variance that originally created engagement.
+
+\subsection{Hierarchical Anticipation Decomposition}
+
+"The Games Getting Old Problem" stems from human pattern recognition eliminating perceived uncertainty. ToA resolves this through recursive application of the anticipation formula itself.
+
+Rather than computing anticipation using fixed win/loss desires, we can use previously computed anticipation values as the desire function for higher-order calculations. This creates an infinite hierarchy: $A_1$ uses basic desires, $A_2$ uses $A_1$ values as desires, $A_3$ uses $A_2$ values, and so forth.
+
+When $A_1$ becomes predictable through learning, $A_2$ captures anticipation about how anticipation itself will vary across future states. This recursive structure explains why complex entertainment maintains long-term engagement while simple forms become stale, and provides a mathematical framework for designing sustainable engagement systems.
+
+\subsection{Optimal Games For Small Turn Games(draft)}
+
+experiment:
+what will be an optimal multiturn game?
+
+1. very high desire variance.
+
+single-turn. you can die or alive at 50% chance.
+
+s1: win
+s2: loss
+s3: fight
+
+2. very high A1 variance
+
+2-turn game.
+
+in turn2, you either die or alive 50% chance.
+in turn1, 
+
+s1: win
+s2: loss
+s3: ??
+s4: ??
+s5: ??
+s6: ??
+
+to maximize A2 only and sacrifice A1 we can just..
+
+s1: win
+s2: loss
+s3: just transit to s1
+s4: just transit to s2
+s5: transit to s3,s4 50% chance
+
+however, this just reduces to optimal binary game. meaning this approach meaningless.
+
+..wow this is a hard problem. you need an actual optimization algorithm for this I think
+manipulating A1 in any way will bring the A1 value from 0.5 to something less. meaning it is indeed a multi parameter optimization problem. now I know why novel game design is so hard and is beyond intuition.
+
+3. very high A2 variance.
+in turn3, you either die or alive 50% chance.
+in turn2, same as 2 turn game.
+in turn1. ...
+
+todo: maybe test genetic algorithm that will find state nodes & transitions mutatable, and pick the well performing one, and interpret why it worked well.
+
+\end{document}
