@@ -37,7 +37,7 @@ $$\mu = \sum_{s'} P(s \to s') \cdot D_{global}(s')$$
 $$A_1(s) = \sqrt{\sum_{s'} P(s \to s') \cdot (D_{global}(s') - \mu)^2}$$
 
 This is the Local Anticipation formula, the core foundation of anticipation theory.
-Please refer to the white paper for complete mathematical details and derivation.
+Please refer to the white paper for complete mathematical details and derivation(located inside /LaTeX).
 
 Global and nested values are just algorithmic expansion of this (dynamic programming and recursion).
 
