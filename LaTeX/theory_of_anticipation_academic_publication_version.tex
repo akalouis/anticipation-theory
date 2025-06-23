@@ -1,0 +1,280 @@
+\documentclass{article}
+\usepackage{arxiv}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{hyperref}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{example}{Example}
+\newcounter{gameproblem}
+\newenvironment{gameproblem}[1]{%
+    \refstepcounter{gameproblem}%
+    \noindent\textbf{Problem \thegameproblem: #1}\\
+}{%
+    \par\smallskip%
+}
+
+\title{Formulation of Engagement as Local Anticipation}
+
+\author{
+  Jeeheon (Lloyd) Oh\\
+  Research Division, Farseer Co., Ltd.\\
+  Seoul, Republic of Korea\\
+  \texttt{aka.louis@outlook.com}
+}
+\renewcommand{\shorttitle}{Theory of Anticipation}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Quantifying player engagement ("fun") in game design remains a significant challenge. Traditional Flow theory emphasizes the balance between challenge and skill but provides qualitative rather than quantitative guidance, making systematic optimization difficult. Existing approaches rely on subjective evaluation methods that cannot predict engagement levels or establish mathematical optimality conditions. A rigorous quantitative metric is needed to enable systematic design analysis and optimization.
+
+In this work, we introduce a \emph{local anticipation} metric for a game state $s$, defined as
+\[
+\mu(s) = \sum_{s'} P(s \to s')\,D(s'), \quad
+A(s) = \sqrt{\sum_{s'} P(s \to s')\bigl(D(s') - \mu(s)\bigr)^2}
+\]
+where $P(s\to s')$ denotes the transition probability and $D(s')$ denotes the desirability of outcome $s'$. This metric captures \emph{anticipation of meaningful future events} via the probability-weighted standard deviation of outcome values.
+
+\textbf{Key contributions:}
+\begin{enumerate}
+    \item \textbf{Derivation of Metric:} We derive the formulation from observed principles, yielding the Local Anticipation formulation.
+    \item \textbf{Fundamental Bounds:} We prove that in binary-payoff games, $A(s) \le 0.5$, establishing a theoretical maximum for single-turn game.
+    \item \textbf{Optimally Engaging Single-Turn Games:} We demonstrate that coin toss achieves maximum anticipation (A=0.5) and prove that the coin toss is the optimal single-turn game design for maximizing anticipation.
+\end{enumerate}
+\end{abstract}
+
+\keywords{Game Theory \and Quantitative Game Design \and Player Engagement \and Decision Theory \and Mathematical Optimization \and Entertainment Computing}
+
+\section{Introduction}
+
+Quantifying player engagement in game design remains a fundamental challenge. While established theories such as Flow theory~\cite{csikszentmihalyi1990flow} provide qualitative frameworks for understanding optimal experience, they lack the mathematical precision necessary for systematic design optimization and objective comparison of game mechanics.
+
+This limitation constrains design innovation. Developers must rely on intuition-based approaches without rigorous methods to evaluate novel concepts. Current evaluation techniques require either subjective assessment (which cannot establish mathematical optimality) or full implementation for playtesting (making systematic design exploration prohibitively expensive). The absence of objective engagement metrics forces developers to favor established patterns over innovative mechanics.
+
+We address this limitation by introducing a mathematical framework that quantifies engagement through \emph{local anticipation}—the probability-weighted standard deviation of outcome desirabilities. This provides an objective metric computable directly from game state definitions.
+
+We demonstrate the framework's analytical power through complete mathematical characterization of single-turn games, deriving fundamental engagement bounds and proving that coin toss represents the optimal single-turn game design for maximizing player anticipation.
+
+\section{Related Work}
+
+Flow theory, introduced by Csikszentmihalyi~\cite{csikszentmihalyi1990flow}, identifies optimal experience as arising from the balance between challenge and skill levels. While Flow theory represents the most influential theoretical framework for understanding engagement in game design, it provides only qualitative guidance and cannot quantify the role of uncertainty or differentiate between various sources of engagement within optimal flow states. These limitations render Flow theory objectively insufficient for systematic game design optimization.
+
+Existing game metrics typically measure player behavior (retention, progression) or subjective responses (surveys, reviews) rather than fundamental engagement properties. While valuable for post-launch optimization, these approaches cannot guide design decisions during development and lack the mathematical rigor necessary for systematic design exploration.
+
+The absence of quantitative frameworks for engagement measurement has left game design without objective tools for evaluating novel mechanics or establishing mathematical optimality conditions, creating a fundamental gap between theoretical understanding and practical design needs.
+
+\section{Derivation}
+
+The Theory of Anticipation emerges from fundamental observations about the mathematical nature of engagement, establishing why engagement must be modeled through transition variance rather than static state properties.
+
+\subsection{Static States Generate No Engagement}
+
+Consider achieving a highly desirable game state—commanding lead, optimal positioning—then pausing the game indefinitely. Despite occupying the most advantageous position, this scenario generates zero engagement. This \emph{paused game paradox} reveals that engagement cannot originate from state desirability alone.
+
+Similarly, engagement vanishes when outcomes become certain: guaranteed victory or inevitable defeat both eliminate engagement regardless of how favorable the situation appears.
+
+\subsection{Engagement Requires Transition Uncertainty}
+
+Engagement emerges exclusively from uncertainty about meaningful state transitions. Consider a penalty-only scenario: choosing between losing 10 points (90\% probability) versus losing 100 points (10\% probability). Despite all outcomes being undesirable, the uncertainty about which penalty will occur creates measurable engagement.
+
+This demonstrates that variance between potential outcomes drives engagement even when all outcomes represent losses.
+
+\subsection{Variance-Based Formulation}
+
+These observations establish that neither average desirability nor absolute outcome values determine engagement levels. Instead, the mathematical spread between possible outcomes creates engagement regardless of whether those outcomes represent gains or losses.
+
+This motivates a variance-based approach: engagement should be measured through the probability-weighted dispersion of outcome desirabilities, necessitating the weighted standard deviation formulation that follows.
+
+\section{Local Anticipation}
+
+We model a game as a set of states $S$ with transition probabilities $P(s \to s')$ and desirability function $D: S \to \mathbb{R}$. For any state $s \in S$, we define the expected desirability as:
+
+\begin{equation}
+\mu(s) = \sum_{s' \in S} P(s \to s') \cdot D(s')
+\end{equation}
+
+The \emph{local anticipation} at state $s$ quantifies engagement through the probability-weighted standard deviation of outcome desirabilities:
+
+\begin{equation}
+A(s) = \sqrt{\sum_{s' \in S} P(s \to s') \cdot (D(s') - \mu(s))^2}
+\end{equation}
+
+This formulation captures anticipation as the uncertainty about meaningful future outcomes. High anticipation occurs when transition probabilities are distributed across outcomes with significantly different desirabilities.
+
+For single-turn games, we consider terminal states where $P(s \to s) = 1$ for all outcomes, reducing the analysis to the probability distribution over final desirabilities.
+
+\section{Enabling Objective Analysis}
+
+To eliminate any subjectivity, we apply this rule for desire values: winning states receive $D(\text{win}) = 1$ while all other states receive $D(\text{other}) = 0$.
+We term this the \emph{canonical intrinsic desire}.
+
+By using this canonical desire function, we enable analysis independent of individual player preferences or subjective value assessments. Under this framework, local anticipation reduces to a function of winning probability alone, eliminating all subjective parameters from engagement measurement.
+
+\section{Theoretical Properties}
+
+We establish some properties of the local anticipation metric:
+
+\begin{theorem}[Anticipation Bound for Binary-Payoff Games]
+For binary-payoff games, $A(s) \leq 0.5$ with equality achieved when $p = 0.5$.
+\end{theorem}
+
+\begin{proof}
+Consider a binary-payoff game with win probability $p$, where $D(\text{win}) = 1$ and $D(\text{lose}) = 0$.
+
+The expected desirability is $\mu(s) = p$, so:
+\[
+A(s) = \sqrt{p(1-p)^2 + (1-p)p^2} = \sqrt{p(1-p)}
+\]
+
+To maximize $f(p) = p(1-p)$, we solve $f'(p) = 1-2p = 0$, giving $p = 1/2$.
+
+Since $f''(p) = -2 < 0$, this is a maximum with $f(1/2) = 1/4$.
+
+Therefore $A(s) \leq \sqrt{1/4} = 1/2$, with equality when $p = 1/2$.
+\end{proof}
+
+\begin{theorem}[Anticipation Bound for Canonical Single-Turn Games]
+For any finite single-turn game under canonical desire assignment, $A(s) \leq 0.5$ with equality achieved when the probability of winning equals $0.5$.
+\end{theorem}
+
+\begin{proof}
+Under canonical desire assignment, any multi-outcome game reduces to binary outcomes. Since all winning states have $D = 1$ and all non-winning states have $D = 0$, this creates win/not-win probabilities that reduce to Theorem 1, regardless of the number of outcomes.
+\end{proof}
+
+\section{Optimal Single-Turn Game Design}
+
+Given the theoretical maximum $A = 0.5$, we identify the coin toss as the optimal single-turn game for maximizing player anticipation in canonical settings.
+
+\begin{theorem}[Coin Toss as Optimal Single-Turn Game]
+Among all canonical single-turn games, the fair coin toss achieves maximum local anticipation.
+\end{theorem}
+
+\begin{proof}
+From Theorem 2, the maximum anticipation for canonical games is achieved at $p = 0.5$ with $A = 0.5$. The fair coin toss has exactly these properties: $P(\text{heads}) = P(\text{tails}) = 0.5$, making it the maximizer of local anticipation among all canonical single-turn games.
+\end{proof}
+
+The coin toss represents the solution to the optimization problem:
+$$\max_{p \in [0,1]} \sqrt{p(1-p)}$$
+
+
+
+\section{Expansion of the Framework}
+\subsection{Multi-Turn Games}
+
+Real games involve sequences of decisions extending beyond single transitions. It is intuitive to extend our framework to multi-turn games.
+For acyclic multi-turn games, it is trivial to compute expected desire values through dynamic programming, backpropagating from terminal conditions:
+
+\begin{definition}[Multi-Turn Desire Propagation]
+Given terminal states $T \subseteq S$ with known desire values, we compute:
+\begin{equation}
+D(s) = \sum_{s' \in S} P(s \to s') \cdot D(s')
+\end{equation}
+for all non-terminal states in reverse topological order.
+\end{definition}
+
+Then we can compute the anticipation for each state using the Local Anticipation formula. The algorithm takes $O(|S|)$ time and scales efficiently if state size is not too large.
+
+\subsection{Nested Decomposition of Anticipation}
+
+The most significant extension involves \emph{nested anticipation analysis}, where anticipation values themselves become desire functions for higher-order calculations. This recursive structure produces Taylor-series-like anticipation components $A_1, A_2, A_3, \ldots$, each capturing different engagement depths.
+
+\begin{definition}[Hierarchical Anticipation]
+Define the local anticipation function $\mathcal{A}(s; D)$ for state $s$ with desire function $D$:
+\begin{equation}
+\mathcal{A}(s; D) = \sqrt{\sum_{s'} P(s \to s') \cdot (D(s') - \mu_D(s))^2}
+\end{equation}
+where $\mu_D(s) = \sum_{s'} P(s \to s') \cdot D(s')$.
+
+The hierarchical components are then defined as:
+\begin{align}
+A_1(s) &= \mathcal{A}(s; D) \\
+A_2(s) &= \mathcal{A}(s; A_1) \\
+A_n(s) &= \mathcal{A}(s; A_{n-1}) \text{ for } n \geq 2
+\end{align}
+\end{definition}
+
+This decomposition captures respective depths of engagement:
+\begin{itemize}
+\item $A_1$: Immediate excitement from direct outcomes
+\item $A_2$: Longer term anticipation from varied future possibilities
+\item $A_{3+}$: More longer term \& deep anticipation from complex strategic interactions
+\end{itemize}
+
+\subsection{The Game Ending Button Problem}
+
+Consider a thought experiment: provide players with a button that instantly ends the game with 50\% probability of victory at any moment. This design achieves the theoretical maximum $A_1 = 0.5$ for all game states, as every state effectively becomes a coin-toss game.
+
+However, such a game would be profoundly unengaging despite maximizing first-order anticipation. This paradox demonstrates why optimizing $A_1$ alone is insufficient for creating compelling experiences.
+
+The game ending button game fails because it eliminates all higher anticipation components. More intuitively, it lacks strategic depth since only the game ending button matters, effectively making this game into consecutive single-turn coin-toss games. In short, this game lacks "depth."
+
+The higher-order components effectively capture this notion of "depth." During our preliminary experimentation, the sum $(A_1 + A_2 + A_3 + \ldots)$ more precisely represented the quality of a game design than $A_1$ alone. This makes sense since human intuition naturally and automatically builds models and predicts outcomes to some degree, so it is natural to use combined sum of anticipation components to measure perceived anticipation rather than just $A_1$.
+
+\section{Future Work}
+
+\subsection{More Standardization For Game Design Comparison}
+
+The Game Ending Button Problem demonstrates that multi-component analysis is essential for meaningful engagement measurement. We internally used sum of $A_1$ to $A_5$, however, there is yet no established methodology for optimal weighting of components or determining how many components are needed for standard comparison across games.
+
+Do we need weightings on the components? How many components are reasonable for standard comparison?
+
+Future research could focus on answering these questions.
+
+\subsection{Conjecture: Higher-Order Components May Capture Replayability}
+
+Consider a known phenomenon: a game appears very fun initially with no changes in anticipation $A_1$, however it gradually becomes boring over time despite unchanged mechanics. This phenomenon is often considered as evidence that "fun" is inherently subjective and therefore unquantifiable.
+
+However, the hierarchical structure appears to address this elegantly. Lower components like $A_1$ correspond to immediate action-packed excitement, which is known to diminish quickly. Higher-order components, which correspond to deep strategy, maintain their effectiveness much longer, as seen in games like League of Legends.
+
+This suggests a progression model: as players successfully model the game and master $A_1$ level hierarchy, $A_2$ now becomes the primary driver. When $A_2$ patterns become predictable, $A_3$ takes precedence, and so forth. Games with strong higher-order components can maintain engagement through multiple mastery phases, explaining why strategically complex games demonstrate exceptional longevity compared to mechanically simple games.
+
+While this interpretation aligns with observed phenomenon, systematic longitudinal studies and experiments will be helpful to establish exact relationships between replayability.
+For example, is it logarithmic or linear, the tendency of time needed for players to master each level of anticipation hierarchy.
+
+\subsection{Conjecture: Optimized Higher-Order Components May Generate Narrative Structure}
+
+Optimizing higher-order anticipation creates natural trade-offs with immediate engagement. Maximizing $A_2$ requires variance in $A_1$ values. Since $A_1$ has an upper bound of 0.5, creating non-zero variance mathematically necessitates $A_1$ values lower than 0.5.
+
+This constraint naturally suggests to design games with alternating high- and low-anticipation states, creating rhythmic engagement patterns. This mathematical requirement parallels known storytelling principles: effective narratives require contrast between climactic moments and quieter interludes that allow tension to build.
+
+Mathematically speaking, optimizing multiple components forces the design of high-contrast sequences—intense climactic moments preceded and followed by lower-intensity periods that create anticipation for the next peak. This optimization naturally yields pacing structures that mirror classical narrative frameworks.
+
+While not yet proven, our informal experiments suggest that optimization of multidimensional anticipation may converge on classical narrative structures such as Freytag's Pyramid or the Three-Act Structure.
+Further investigation on this conjecture could yield valuable insights.
+
+\subsection{Conjecture: Anticipation May Be Unbounded for Higher-Order Components}
+
+While $A_1 \leq 0.5$ for binary games, higher-order components may be unbounded. We propose this conjecture based on the observation that deeper engagement often requires temporal development. Creating profound emotional impact within short time frames appears fundamentally more difficult compared to given longer periods.
+
+Following this pattern, while $A_1$ remains constrained to 0.5, $A_2$ may have higher bounds, $A_3$ may exceed $A_2$, and so forth. If this conjecture proves true, we can theoretically build games with arbitrarily high anticipation by making games longer and deeper, constrained only by session time and event density.
+
+Validating this conjecture would have significant implications for game design industry.
+Proving this conjecture means, as opposed to current impression that game designs are saturated so room for innovation is almost exhausted, we may be able to create games with arbitrarily high anticipation with help of newer methodologies like computer-assisted design discovery.
+
+\subsection{Computer-Assisted Design Discovery}
+
+Components beyond $A_2$ exceed the domain where human intuition can effectively optimize. Optimizing $A_2$ necessarily requires sacrificing $A_1$ values, creating a complex combinatorial multi-dimensional optimization problem that surpasses human cognitive capacity for simultaneous consideration of multiple competing objectives.
+
+This matches the observed phenomenon that designing games with strategic depth and long-term engagement is profoundly more difficult than creating immediately exciting and action-packed experiences. Human designers excel at optimizing immediate excitement but struggle with the complex trade-offs required for sustained engagement.
+
+Computer-assisted approaches offer systematic solutions to these limitations. By defining formal game models and employing genetic algorithms, gradient descent, and other optimization methods, we can discover novel game designs and optimal parameter configurations that navigate these complex trade-off spaces more effectively than human intuition alone.
+
+We have shown the dynamic programming algorithms for computing nested components in $O(|S|)$ time for each component in above sections. Optimization of game design in this manner is definitely feasible.
+
+
+
+
+\begin{thebibliography}{1}
+
+\bibitem{csikszentmihalyi1990flow}
+Mihaly Csikszentmihalyi.
+\newblock {\em Flow: The Psychology of Optimal Experience}.
+\newblock Harper \& Row, New York, 1990.
+
+\end{thebibliography}
+
+\end{document}
