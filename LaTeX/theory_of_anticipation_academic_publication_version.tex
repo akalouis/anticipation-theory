@@ -115,7 +115,8 @@ For single-turn games, we consider terminal states where $P(s \to s) = 1$ for al
 To eliminate any subjectivity, we apply this rule for desire values: winning states receive $D(\text{win}) = 1$ while all other states receive $D(\text{other}) = 0$.
 We term this the \emph{canonical intrinsic desire}.
 
-By using this canonical desire function, we remove any subjectivity. This enables comparison of various games under standardized conditions.
+By using this canonical desire function, we eliminate subjectivity.
+This enables comparison of various games under standardized conditions.
 While it is also possible to customize the desire function for experimental purposes, we've found that using the canonical intrinsic desire function was sufficient for most purposes we have encountered.
 
 \section{Theoretical Properties}
@@ -207,73 +208,6 @@ This decomposition captures respective depths of engagement:
 \item $A_{3+}$: More longer term \& deep anticipation from complex strategic interactions
 \end{itemize}
 
-\subsection{The Game Ending Button Problem}
-
-Consider a thought experiment: provide players with a button that instantly ends the game with 50\% probability of victory at any moment. This design achieves the theoretical maximum $A_1 = 0.5$ for all game states, as every state effectively becomes a coin-toss game.
-
-However, such a game would be profoundly unengaging despite maximizing first-order anticipation. This paradox demonstrates why optimizing $A_1$ alone is insufficient for creating compelling experiences.
-
-The game ending button game fails because it eliminates all higher anticipation components. More intuitively, it lacks strategic depth since only the game ending button matters, effectively making this game into consecutive single-turn coin-toss games. In short, this game lacks "depth."
-
-The higher-order components effectively capture this notion of "depth." During our preliminary experimentation, the sum $(A_1 + A_2 + A_3 + \ldots)$ more precisely represented the quality of a game design than $A_1$ alone. This makes sense since human intuition naturally and automatically builds models and predicts outcomes to some degree, so it is natural to use combined sum of anticipation components to measure perceived anticipation rather than just $A_1$.
-
-\section{Future Work}
-
-\subsection{More Standardization For Game Design Comparison}
-
-The Game Ending Button Problem demonstrates that multi-component analysis is essential for meaningful engagement measurement. We internally used sum of $A_1$ to $A_5$, however, there is yet no established methodology for optimal weighting of components or determining how many components are needed for standard comparison across games.
-
-Do we need weightings on the components? How many components are reasonable for standard comparison?
-
-Future research could focus on answering these questions.
-
-\subsection{Conjecture: Higher-Order Components May Capture Replayability}
-
-Consider a known phenomenon: a game appears very fun initially with no changes in anticipation $A_1$, however it gradually becomes boring over time despite unchanged mechanics. This phenomenon is often considered as evidence that "fun" is inherently subjective and therefore unquantifiable.
-
-However, the hierarchical structure appears to address this elegantly. The decaying of engagement over time occurs because as the understanding of the game evolves, players become able to predict outcomes more accurately, reducing the perceived variance of significnat events within a game session.
-
-$A_2$ is technically an anticipation of anticipation, indicating perceived variance after a player has mastered $A_1$ level patterns.
-
-So we can now predict several properties according to this explanation.
-As players successfully model the game and master $A_1$ level hierarchy, $A_2$ now becomes the primary driver. When $A_2$ patterns become predictable, $A_3$ takes precedence, and so forth.
-Games with strong higher-order components will be able to maintain engagement longer through multiple mastery phases, explaining why strategically complex games like League of Legends demonstrate exceptional longevity compared to action focused games with shallow strategic depth.
-
-While this interpretation aligns well with observations, more systematic analysis will be appreciated to establish the exact relationship between higher-order anticipation components and replayability.
-For example, is it logarithmic or linear, and the tendency of time needed for players to master each level of anticipation hierarchy.
-
-\subsection{Conjecture: Optimizing Higher-Order Components May Generate Narrative Structure}
-
-Optimizing higher-order anticipation creates natural trade-offs with immediate engagement. Maximizing $A_2$ requires variance in $A_1$ values. Since $A_1$ has an upper bound of 0.5, creating non-zero variance mathematically necessitates $A_1$ values lower than 0.5.
-
-This constraint naturally suggests to design games with alternating high- and low-anticipation states, creating rhythmic engagement patterns. This mathematical requirement appears to indicate some known storytelling principles.
-
-While not yet proven, our informal experiments suggest that optimization of multidimensional anticipation may converge on classical narrative structures such as Freytag's Pyramid or the Three-Act Structure.
-Further investigation on this conjecture could yield valuable insights.
-
-\subsection{Conjecture: Anticipation May Be Unbounded for Higher-Order Components}
-
-While $A_1 \leq 0.5$ for binary games, higher-order components may be unbounded. We propose this conjecture based on the observation that deeper engagement often requires temporal development. Creating profound emotional impact within short time frames appears fundamentally more difficult compared to given longer periods.
-
-Following this pattern, while $A_1$ remains constrained to 0.5, $A_2$ may have higher bounds, $A_3$ may exceed $A_2$, and so forth. If this conjecture proves true, we can theoretically build games with arbitrarily high anticipation by making games longer and deeper, constrained only by session time and event density.
-
-Validating this conjecture would have significant implications for game design industry.
-Proving this conjecture means, as opposed to current impression that game designs are saturated so room for innovation is almost exhausted, we may be able to create games with arbitrarily high anticipation with help of newer methodologies like computer-assisted design discovery.
-
-\subsection{Computer-Assisted Design Discovery}
-
-Components beyond $A_2$ exceed the domain where human intuition can effectively optimize. Optimizing $A_2$ necessarily requires sacrificing $A_1$ values, creating a complex combinatorial multi-dimensional optimization problem that surpasses human cognitive capacity for simultaneous consideration of multiple competing objectives.
-
-This matches the observed phenomenon that designing games with strategic depth and long-term engagement is profoundly more difficult than creating immediately exciting and action-packed experiences.
-
-Computer-assisted approaches offer systematic solutions to these limitations. By defining formal game models and employing genetic algorithms, gradient descent, and other optimization methods, we can discover novel game designs and optimal parameter configurations that navigate these complex trade-off spaces more effectively than human intuition alone.
-
-We have shown the dynamic programming algorithms for computing nested components in $O(|S|)$ time for each component in above sections. Optimization of game design in this manner is readily feasible.
-
-
-
-
-
 \section{Experiments}
 \subsection{HpGame}
 
@@ -315,15 +249,17 @@ Player1 HP & Player2 HP & $A_1$ & $A_2$ & $A_3$ & $A_4$ & $A_5$ & Sum \\
 \end{table}
 \textbf{Game Design Score}: 0.176 ($A_1$ metric), 0.430 (sum $A_1$\textasciitilde$A_5$)
 
-Most engaging moments occur at close HP values with moderate win probabilities. The highest individual $A_1$ values occur at 1, 1 HP states (coin-toss game). The reason why $A_1$ is not 0.5 is because win probability is not exactly 0.5 due to the both attack (draw) scenario.
+The most engaging moments occur when HP values are close and win probabilities are moderate.
+The highest individual $A_1$ values occur at 1, 1 HP states (coin-toss game).
+$A_1$ does not reach 0.5 because the win probability is not exactly 0.5 due to the mutual attack (draw) scenario.
 
 Also, it is remarkable that the sum of $A_1$\textasciitilde$A_5$ can exceed 0.5, as shown in the first row. This observation suggests potential for an unbounded conjecture regarding hierarchical anticipation components.
 
-Note that Game Design Score (GDS) is averaged $A_1$-$A_5$ over all states, weighted by respective state's reachability from the initial state.
+Note that Game Design Score (GDS) is computed by averaging sum of $A_1$-$A_5$ over all states, weighted by respective state's reachability from the initial state.
 
 \subsection{HpGame\_Rage}
 
-We expanded HpGame with new ``rage/crit'' mechanics. This rage/crit system yielded the highest GDS in our trials.
+We expand HpGame with novel ``rage/crit'' mechanics. This rage/crit system yielded the highest GDS in our trials.
 
 \textbf{Rage/Crit System}: 
 \begin{itemize}
@@ -336,7 +272,8 @@ We expanded HpGame with new ``rage/crit'' mechanics. This rage/crit system yield
 \textbf{Model Definition}: 
 
 The rage system expands the transition space to 8 possible outcomes per turn, where $p_h$ = hit probability, $p_c$ = critical hit probability, and $p_m$ = miss probability.
-Note that we don't have both miss scenario to prevent cyclic states. This missing probability will be evenly distributed to the other outcomes.
+Note that we exclude the mutual miss scenario to prevent cyclic states.
+This excluded probability will be evenly distributed to the remaining outcomes.
 
 \begin{align}
 &P(\text{P1 hits, P2 misses}) = p_h \cdot p_m \\
@@ -425,45 +362,102 @@ Critical \% & GDS & Critical \% & GDS \\
 \caption{Critical hit probability optimization results}
 \end{table}
 
-We've found that the optimal critical hit chance was 13\%. Also, inverted-U relationship is observed.
-It is because, if the critical hit chance is too low, the game becomes continuously equal to just HpGame (from hpgame rage).
+We found that the optimal critical hit chance was 13\%, with a clear inverted-U relationship observed across the parameter space. This pattern is reasonable: when critical hit chance is too low, the game converges toward baseline behavior(just HpGame without any additional mechanics). Conversely, when critical hit chance is too high, small tactical advantages such as 1 HP differences become progressively irrelevant, as critical hits increasingly dominate game outcomes.
 
-if the critical hit chance is too high, small consequences like 1 hp different is contuously mattering less and less.
-Also, this is a practical proof of using computer assisted optimization of paramters.
-
-While it is somehow intuitively possible to guess that 10~15\% must be sweet spot of crit chance with some tests and blah,
-it is clearly beyond what intuition can xxx to guess that 13\% was the optimal value. without this kind of systematic optimization.
-
-This proves this as a practicalilty of this framework. 
-
-\begin{itemize}
-\item \textbf{Optimal critical chance: 13\%} (score: 0.551)
-\item Clear inverted-U relationship, not monotonic
-\item Engagement degrades beyond 15\% critical chance
-\end{itemize}
+This case serves as practical validation of computer-assisted parameter optimization methodology in game design.
+While intuition might reasonably suggest that 10-15\% would be a viable critical hit range based on conventional design experience, precisely identifying 13\% as the optimal value is clearly beyond what intuition-based exploration can achieve.
 
 
-This optimization demonstrates the framework's ability to discover non-obvious parameter values that maximize engagement, validating its utility for systematic game design.
+
+\section{Discussion and Future Work}
+
+\subsection{The Game Ending Button Problem}
+
+Consider a thought experiment: provide players with a button that instantly ends the game with 50\% probability of victory at any moment. This design achieves the theoretical maximum $A_1 = 0.5$ for all game states, as every state effectively becomes a coin-toss game.
+
+However, such a game would be profoundly unengaging despite maximizing first-order anticipation. This paradox demonstrates why optimizing $A_1$ alone is insufficient for creating compelling experiences.
+
+The game ending button game fails because it eliminates all higher anticipation components. More intuitively, it lacks strategic depth since only the game ending button matters, effectively making this game into consecutive single-turn coin-toss games. In short, this game lacks "depth."
+
+The higher-order components effectively capture this notion of "depth." During our preliminary experimentation, the sum $(A_1 + A_2 + A_3 + \ldots)$ more precisely represented the quality of a game design than $A_1$ alone.
+This makes sense since human intuition naturally and automatically builds models and predicts outcomes to some degree, so it is natural to use the combined sum of anticipation components to measure perceived anticipation rather than just $A_1$.
+
+\subsection{More Standardization For Game Design Comparison}
+
+The Game Ending Button Problem demonstrates that multi-component analysis is essential for meaningful engagement measurement. We internally used sum of $A_1$ to $A_5$, however, there is yet no established methodology for optimal weighting of components or determining how many components are needed for standard comparison across games.
+
+Do we need weightings on the components? How many components are reasonable for standard comparison?
+
+Future research could focus on answering these questions.
+
+\subsection{Conjecture: Higher-Order Components May Capture Replayability}
+
+Consider a known phenomenon: a game appears very fun initially with no changes in anticipation $A_1$, however it gradually becomes boring over time despite unchanged mechanics. This phenomenon is often considered as evidence that "fun" is inherently subjective and therefore unquantifiable.
+
+However, the hierarchical structure appears to address this elegantly. The decaying of engagement over time occurs because as the understanding of the game evolves, players become able to predict outcomes more accurately, reducing the perceived variance of significant events within a game session.
+
+$A_2$ is technically an anticipation of anticipation, indicating perceived variance after a player has mastered $A_1$ level patterns.
+
+So we can now predict several properties according to this explanation.
+As players successfully model the game and master $A_1$ level hierarchy, $A_2$ now becomes the primary driver. When $A_2$ patterns become predictable, $A_3$ takes precedence, and so forth.
+Games with strong higher-order components will be able to maintain engagement longer through multiple mastery phases, explaining why strategically complex games like League of Legends demonstrate exceptional longevity compared to action focused games with shallow strategic depth.
+
+While this interpretation aligns well with observations, more systematic analysis will be appreciated to establish the exact relationship between higher-order anticipation components and replayability.
+For example, is it logarithmic or linear, and the tendency of time needed for players to master each level of anticipation hierarchy.
+
+\subsection{Conjecture: Optimizing Higher-Order Components May Generate Narrative Structure}
+
+Optimizing higher-order anticipation creates natural trade-offs with immediate engagement. Maximizing $A_2$ requires variance in $A_1$ values. Since $A_1$ has an upper bound of 0.5, creating non-zero variance mathematically necessitates $A_1$ values lower than 0.5.
+
+This constraint naturally suggests to design games with alternating high- and low-anticipation states, creating rhythmic engagement patterns.
+This mathematical requirement appears to align with established storytelling principles.
+
+While not yet proven, our informal experiments suggest that optimization of multidimensional anticipation may converge on classical narrative structures such as Freytag's Pyramid or the Three-Act Structure.
+Further investigation on this conjecture could yield valuable insights.
+
+\subsection{Conjecture: Anticipation May Be Unbounded for Higher-Order Components}
+
+While $A_1 \leq 0.5$ for binary games, higher-order components may be unbounded. We propose this conjecture based on the observation that deeper engagement often requires temporal development.
+Creating profound emotional impact within short time frames appears fundamentally more difficult than when given longer time periods.
+
+Following this pattern, while $A_1$ remains constrained to 0.5, $A_2$ may have higher bounds, $A_3$ may exceed $A_2$, and so forth. If this conjecture proves true, we can theoretically build games with arbitrarily high anticipation by making games longer and deeper, constrained only by session time and event density.
+
+Validating this conjecture would have significant implications for game design industry.
+Proving this conjecture means, as opposed to current impression that game designs are saturated so room for innovation is almost exhausted, we may be able to create games with arbitrarily high anticipation with help of newer methodologies like computer-assisted design discovery.
+
+\subsection{Computer-Assisted Design Discovery}
+
+Components beyond $A_2$ exceed the domain where human intuition can effectively optimize. Optimizing $A_2$ necessarily requires sacrificing $A_1$ values, creating a complex combinatorial multi-dimensional optimization problem that surpasses human cognitive capacity for simultaneous consideration of multiple competing objectives.
+
+This matches the observed phenomenon that designing games with strategic depth and long-term engagement is profoundly more difficult than creating immediately exciting and action-packed experiences.
+
+Computer-assisted approaches offer systematic solutions to these limitations. By defining formal game models and employing genetic algorithms, gradient descent, and other optimization methods, we can discover novel game designs and optimal parameter configurations that navigate these complex trade-off spaces more effectively than human intuition alone.
+
+We have shown the dynamic programming algorithms for computing nested components in $O(|S|)$ time for each component in above sections. Optimization of game design in this manner is readily feasible.
 
 \section{Conclusion}
 
-We have demonstrated that HpGame\_Rage is +26.5\% superior to HpGame, with a mathematically validated Game Design Score comparison (0.544 vs. 0.430). This represents a significant achievement, as it provides objective, quantitative evidence rather than subjective opinion.
+We have demonstrated that HpGame\_Rage is +26.5\% superior to HpGame, with a mathematically validated comparison (GDS 0.544 vs. 0.430).
+We believe this may be the first time two game designs have been compared with objective mathematical evidence with high certainty.
 
-We have successfully demonstrated the development of novel game mechanics for 1v1 fighting games using our framework. We developed and validated new ``rage/crit'' mechanics with unprecedented design certainty, eliminating the need for extensive playtesting and actual implementation during the conceptual phase.
+We have successfully demonstrated the development of novel game mechanics for 1v1 fighting games using our framework. We developed and validated new ``rage/crit'' mechanics with unprecedented design certainty, eliminating the need for extensive playtesting and actual implementation.
 
-For nested anticipation, we observe that higher-order anticipation components ($A_4$, $A_5$) in HpGame\_Rage effectively capture narrative structure and meaningful long-term strategic branches. This provides empirical validation for our nested anticipation decomposition approach, demonstrating that the framework successfully quantifies multi-temporal engagement layers.
+For nested anticipation, we observe that higher-order anticipation components ($A_4$, $A_5$) in HpGame\_Rage effectively capture long-term strategic branches hence narrative structure.
+This provides empirical evidence for our nested anticipation decomposition approach.
 
-Furthermore, we gained new insights through systematic state space analysis, such as discovering that ``slightly asymmetric game states generate superior engagement compared to perfectly balanced scenarios.'' These findings transform previously intuitive design principles into mathematically verified conclusions.
+Also, we were able to gain new insights through state space analysis, such as discovering that ``slightly asymmetric game states generate superior engagement compared to perfectly balanced scenarios.''
 
-Lastly, we demonstrated systematic optimization of critical hit chance, further improving the Game Design Score from 0.544 to 0.551 (+1.3\% improvement) by adjusting the parameter from 10\% to 13\%. This serves as a practical example of applying our framework to optimize game mechanics and parameters, yielding directly applicable design insights.
+Lastly, we demonstrated optimization of critical hit chance, further improving the Game Design Score from 0.544 to 0.551 (+1.3\% improvement) by adjusting the parameter from 10\% to 13\%. This serves as a practical example of applying our framework to optimize game mechanics and parameters, yielding directly applicable design insights.
 
 To achieve equivalent optimization without this framework, one would need to conduct extensive large-scale statistical studies with hundreds of players and fully playable prototypes---clearly impractical for the numerous micro-design decisions required in modern game development environments.
 
-This establishes our framework as a potentially transformative tool for game development, enabling mathematical and objective design evaluation without traditional dependencies on costly playtesting cycles. In today's saturated gaming market, where innovation often relies on incremental genre mixing, this framework offers substantial potential to break through current design limitations by providing systematic methods for discovering and validating truly novel mechanics.
+This positions our framework as a potentially transformative tool for game design, this level of mathematical and objective design insight was previously impossible to achieve with such precision.
+
+In today's saturated gaming market, where innovation often relies on incremental genre mixing, this framework offers substantial potential to break through current design limitations by providing systematic methods for discovering and validating truly novel mechanics.
 
 \section{Limitations and Scope}
 
-This framework is best suited to games with well-defined objectives. It works well for competitive games with clear win conditions, especially competitive MOBAs, but performs poorly for games like Minecraft where exact win conditions don't exist.
+This framework is best suited to games with well-defined objectives. It works well for competitive games with clear win conditions, especially competitive MOBAs, but applies poorly for games like Minecraft where exact win conditions don't exist.
 
 Additionally, real games operate in real-time with prohibitively large state spaces. Practical application requires building idealized and simplified models for computational feasibility.
 
