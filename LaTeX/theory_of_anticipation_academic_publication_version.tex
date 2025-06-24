@@ -63,6 +63,8 @@ We demonstrate the framework's analytical power through complete mathematical ch
 
 Flow theory, introduced by Csikszentmihalyi~\cite{csikszentmihalyi1990flow}, identifies optimal experience as arising from the balance between challenge and skill levels. While Flow theory represents the most influential theoretical framework for understanding engagement in game design, it provides only qualitative guidance and cannot quantify the role of uncertainty or differentiate between various sources of engagement within optimal flow states. These limitations render Flow theory objectively insufficient for systematic game design optimization.
 
+GameFlow~\cite{sweetser2005gameflow} adapted flow theory into eight game-specific elements and demonstrated that structured criteria could distinguish between successful and failed games. Subsequent frameworks like PLEX~\cite{arrasvuori2010plex} categorized 22 playful experiences, while the Player Experience Inventory~\cite{abeele2020pxi} provided dual-level measurement validated across multiple studies. Despite theoretical sophistication, these approaches remain fundamentally qualitative assessment tools rather than mathematical optimization frameworks.
+
 Existing game metrics typically measure player behavior (retention, progression) or subjective responses (surveys, reviews) rather than fundamental engagement properties. While valuable for post-launch optimization, these approaches cannot guide design decisions during development and lack the mathematical rigor necessary for systematic design exploration.
 
 The absence of quantitative frameworks for engagement measurement has left game design without objective tools for evaluating novel mechanics or establishing mathematical optimality conditions, creating a fundamental gap between theoretical understanding and practical design needs.
@@ -112,7 +114,8 @@ For single-turn games, we consider terminal states where $P(s \to s) = 1$ for al
 To eliminate any subjectivity, we apply this rule for desire values: winning states receive $D(\text{win}) = 1$ while all other states receive $D(\text{other}) = 0$.
 We term this the \emph{canonical intrinsic desire}.
 
-By using this canonical desire function, we enable analysis independent of individual player preferences or subjective value assessments. Under this framework, local anticipation reduces to a function of winning probability alone, eliminating all subjective parameters from engagement measurement.
+By using this canonical desire function, we remove any subjectivity. This enables comparison of various games under standardized conditions.
+While it is also possible to customize the desire function for experimental purposes, we've found that using the canonical intrinsic desire function was sufficient for most purposes we have encountered.
 
 \section{Theoretical Properties}
 
@@ -228,20 +231,22 @@ Future research could focus on answering these questions.
 
 Consider a known phenomenon: a game appears very fun initially with no changes in anticipation $A_1$, however it gradually becomes boring over time despite unchanged mechanics. This phenomenon is often considered as evidence that "fun" is inherently subjective and therefore unquantifiable.
 
-However, the hierarchical structure appears to address this elegantly. Lower components like $A_1$ correspond to immediate action-packed excitement, which is known to diminish quickly. Higher-order components, which correspond to deep strategy, maintain their effectiveness much longer, as seen in games like League of Legends.
+However, the hierarchical structure appears to address this elegantly. The decaying of engagement over time occurs because as the understanding of the game evolves, players become able to predict outcomes more accurately, reducing the perceived variance of significnat events within a game session.
 
-This suggests a progression model: as players successfully model the game and master $A_1$ level hierarchy, $A_2$ now becomes the primary driver. When $A_2$ patterns become predictable, $A_3$ takes precedence, and so forth. Games with strong higher-order components can maintain engagement through multiple mastery phases, explaining why strategically complex games demonstrate exceptional longevity compared to mechanically simple games.
+$A_2$ is technically an anticipation of anticipation, indicating perceived variance after a player has mastered $A_1$ level patterns.
 
-While this interpretation aligns with observed phenomenon, systematic longitudinal studies and experiments will be helpful to establish exact relationships between replayability.
-For example, is it logarithmic or linear, the tendency of time needed for players to master each level of anticipation hierarchy.
+So we can now predict several properties according to this explanation.
+As players successfully model the game and master $A_1$ level hierarchy, $A_2$ now becomes the primary driver. When $A_2$ patterns become predictable, $A_3$ takes precedence, and so forth.
+Games with strong higher-order components will be able to maintain engagement longer through multiple mastery phases, explaining why strategically complex games like League of Legends demonstrate exceptional longevity compared to action focused games with shallow strategic depth.
 
-\subsection{Conjecture: Optimized Higher-Order Components May Generate Narrative Structure}
+While this interpretation aligns well with observations, more systematic analysis will be appreciated to establish the exact relationship between higher-order anticipation components and replayability.
+For example, is it logarithmic or linear, and the tendency of time needed for players to master each level of anticipation hierarchy.
+
+\subsection{Conjecture: Optimizing Higher-Order Components May Generate Narrative Structure}
 
 Optimizing higher-order anticipation creates natural trade-offs with immediate engagement. Maximizing $A_2$ requires variance in $A_1$ values. Since $A_1$ has an upper bound of 0.5, creating non-zero variance mathematically necessitates $A_1$ values lower than 0.5.
 
-This constraint naturally suggests to design games with alternating high- and low-anticipation states, creating rhythmic engagement patterns. This mathematical requirement parallels known storytelling principles: effective narratives require contrast between climactic moments and quieter interludes that allow tension to build.
-
-Mathematically speaking, optimizing multiple components forces the design of high-contrast sequences—intense climactic moments preceded and followed by lower-intensity periods that create anticipation for the next peak. This optimization naturally yields pacing structures that mirror classical narrative frameworks.
+This constraint naturally suggests to design games with alternating high- and low-anticipation states, creating rhythmic engagement patterns. This mathematical requirement appears to indicate some known storytelling principles.
 
 While not yet proven, our informal experiments suggest that optimization of multidimensional anticipation may converge on classical narrative structures such as Freytag's Pyramid or the Three-Act Structure.
 Further investigation on this conjecture could yield valuable insights.
@@ -259,21 +264,206 @@ Proving this conjecture means, as opposed to current impression that game design
 
 Components beyond $A_2$ exceed the domain where human intuition can effectively optimize. Optimizing $A_2$ necessarily requires sacrificing $A_1$ values, creating a complex combinatorial multi-dimensional optimization problem that surpasses human cognitive capacity for simultaneous consideration of multiple competing objectives.
 
-This matches the observed phenomenon that designing games with strategic depth and long-term engagement is profoundly more difficult than creating immediately exciting and action-packed experiences. Human designers excel at optimizing immediate excitement but struggle with the complex trade-offs required for sustained engagement.
+This matches the observed phenomenon that designing games with strategic depth and long-term engagement is profoundly more difficult than creating immediately exciting and action-packed experiences.
 
 Computer-assisted approaches offer systematic solutions to these limitations. By defining formal game models and employing genetic algorithms, gradient descent, and other optimization methods, we can discover novel game designs and optimal parameter configurations that navigate these complex trade-off spaces more effectively than human intuition alone.
 
-We have shown the dynamic programming algorithms for computing nested components in $O(|S|)$ time for each component in above sections. Optimization of game design in this manner is definitely feasible.
+We have shown the dynamic programming algorithms for computing nested components in $O(|S|)$ time for each component in above sections. Optimization of game design in this manner is readily feasible.
 
+\section{Limitations and Scope}
 
+This framework is best suited to games with well-defined objectives. It works well for competitive games with clear win conditions, especially competitive MOBAs, but performs poorly for games like Minecraft where exact win conditions don't exist.
+
+Additionally, real games operate in real-time with prohibitively large state spaces. Practical application requires building idealized and simplified models for computational feasibility.
+
+\section{Conclusion}
+
+Based on observations that engagement emerges from uncertainty about meaningful outcomes, we derived the Local Anticipation formulation as the core of our framework. We proved that the optimal single-turn game under canonical settings is the fair coin toss, achieving maximum anticipation of 0.5.
+
+We explored various extensions of the framework, including multi-turn games and nested anticipation components. The hierarchical decomposition of anticipation was especially notable, revealing interesting properties that match observed principles of game design and narrative structure.
+
+Also, our experimentation shows promising results in using the framework as a design tool.
+
+\section{Applications}
+\subsection{HpGame}
+
+HpGame models a simplified 1v1 fighting game where each player has health points and can attack with hit/miss probability. Players alternate turns until one reaches zero health.
+
+\textbf{Model Definition}: Two players with HP $\in \{1,2,3,4,5\}$, with three equally likely transition outcomes per turn:
+\begin{align}
+P(\text{Player 1 hits, Player 2 misses}) &= \frac{1}{3} \\
+P(\text{Both players hit}) &= \frac{1}{3} \\
+P(\text{Player 1 misses, Player 2 hits}) &= \frac{1}{3}
+\end{align}
+Each successful hit deals 1 damage.
+
+\textbf{Results}:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+Player1 HP & Player2 HP & $A_1$ & $A_2$ & $A_3$ & $A_4$ & $A_5$ & Sum \\
+\hline
+2 & 1 & 0.31 & 0.22 & 0.00 & 0.00 & 0.00 & 0.53 \\
+1 & 1 & 0.47 & 0.00 & 0.00 & 0.00 & 0.00 & 0.47 \\
+2 & 2 & 0.28 & 0.07 & 0.10 & 0.00 & 0.00 & 0.45 \\
+\hline
+\end{tabular}
+\caption{Most engaging game states in baseline HpGame}
+\end{table}
+
+\textbf{Game Design Score}: 0.176 ($A_1$ metric), 0.430 (sum $A_1$\textasciitilde$A_5$)
+
+Analysis reveals the most engaging moments occur at close HP values with moderate win probabilities. The highest individual $A_1$ values occur at equal HP states (coin-toss game). The reason why $A_1$ is not 0.5 is because win probability is not exactly 0.5 due to the both attack (draw) scenario.
+
+Also, it is remarkable that the sum of $A_1$\textasciitilde$A_5$ can exceed 0.5, as shown in the first row. This observation suggests potential for an unbounded conjecture regarding hierarchical anticipation components.
+
+Note that Game Design Score(GDS) is averaged $A_1$-$A_5$ over all states, weighted by respective state's reachability from the initial state.
+
+\subsection{HpGame\_Rage}
+
+We expanded HpGame with new ``rage/crit'' mechanics. This rage/crit system yielded the highest GDS in our trials.
+
+\textbf{Rage System}: 
+\begin{itemize}
+\item Rage accumulates when dealing or receiving damage
+\item Critical hits deal additional damage: $\text{damage} = 1 + (\text{rage} \times \text{rage\_multiplier})$ (default multiplier is 1)
+\item Rage persists and does not spend on critical hits, only increasing over time
+\item Players can land critical hits with fixed probability (10\% in this experiment)
+\end{itemize}
+
+\textbf{Model Definition}: 
+
+The rage system expands the transition space to 8 possible outcomes per turn, where $p_h$ = hit probability, $p_c$ = critical hit probability, and $p_m$ = miss probability.
+Note that we don't have both miss scenario to prevent cyclic states. This missing probability will be evenly distributed to the other outcomes.
+
+\begin{align}
+&P(\text{P1 hits, P2 misses}) = p_h \cdot p_m \\
+&P(\text{P1 crits, P2 misses}) = p_c \cdot p_m \\
+&P(\text{P1 misses, P2 hits}) = p_m \cdot p_h \\
+&P(\text{P1 misses, P2 crits}) = p_m \cdot p_c \\
+&P(\text{Both hit}) = p_h \cdot p_h \\
+&P(\text{P1 hits, P2 crits}) = p_h \cdot p_c \\
+&P(\text{P1 crits, P2 hits}) = p_c \cdot p_h \\
+&P(\text{Both crit}) = p_c \cdot p_c
+\end{align}
+
+\textbf{Results}:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+HP$_1$ & HP$_2$ & Rage$_1$ & Rage$_2$ & $A_1$ & $A_2$ & $A_3$ & $A_4$ & $A_5$ & Sum \\
+\hline
+4 & 3 & 2 & 3 & 0.26 & 0.31 & 0.22 & 0.11 & 0.04 & 0.94 \\
+3 & 4 & 3 & 3 & 0.27 & 0.30 & 0.21 & 0.11 & 0.03 & 0.92 \\
+3 & 3 & 4 & 4 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
+3 & 3 & 3 & 4 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
+3 & 3 & 3 & 2 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
+3 & 3 & 3 & 3 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
+3 & 3 & 2 & 3 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
+3 & 3 & 4 & 3 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
+4 & 3 & 2 & 2 & 0.23 & 0.26 & 0.19 & 0.10 & 0.04 & 0.82 \\
+4 & 3 & 3 & 2 & 0.23 & 0.26 & 0.19 & 0.10 & 0.04 & 0.82 \\
+5 & 3 & 2 & 2 & 0.18 & 0.24 & 0.21 & 0.13 & 0.06 & 0.82 \\
+4 & 2 & 2 & 3 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
+4 & 2 & 4 & 4 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
+4 & 2 & 3 & 4 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
+4 & 2 & 4 & 3 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
+4 & 2 & 3 & 3 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
+3 & 5 & 2 & 2 & 0.14 & 0.23 & 0.19 & 0.12 & 0.06 & 0.74 \\
+3 & 4 & 2 & 2 & 0.20 & 0.23 & 0.18 & 0.10 & 0.03 & 0.74 \\
+3 & 4 & 2 & 3 & 0.20 & 0.23 & 0.18 & 0.10 & 0.03 & 0.74 \\
+2 & 4 & 3 & 3 & 0.29 & 0.22 & 0.15 & 0.06 & 0.02 & 0.74 \\
+\hline
+\end{tabular}
+\caption{Top engaging states with rage mechanics}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+Game & $A_1$ Score & Sum($A_1$\textasciitilde$A_5$) & Improvement \\
+\hline
+HpGame & 0.176 & 0.430 & -- \\
+HpGame\_Rage & 0.199 & 0.544 & +26.5\% \\
+\hline
+\end{tabular}
+\caption{Performance comparison: HpGame vs. HpGame\_Rage}
+\end{table}
+
+TBD the analysis
+
+\subsection{Parameter Optimization}
+
+We optimized the critical hit chance in HpGame\_Rage to maximize engagement. Optimization was performed by simple brute-force search over 1\% increments from 0\% to 40\% critical hit chance.
+
+\textbf{Key Findings}:
+\begin{itemize}
+\item \textbf{Optimal critical chance: 13\%} (score: 0.551)
+\item Clear inverted-U relationship, not monotonic
+\item Engagement degrades beyond 15\% critical chance
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c||c|c|}
+\hline
+Critical \% & GDS & Critical \% & GDS \\
+\hline
+0\% & 0.430 & 21\% & 0.529 \\
+1\% & 0.434 & 22\% & 0.524 \\
+2\% & 0.451 & 23\% & 0.519 \\
+3\% & 0.469 & 24\% & 0.514 \\
+4\% & 0.485 & 25\% & 0.509 \\
+5\% & 0.500 & 26\% & 0.503 \\
+6\% & 0.513 & 27\% & 0.498 \\
+7\% & 0.523 & 28\% & 0.493 \\
+8\% & 0.532 & 29\% & 0.487 \\
+9\% & 0.539 & 30\% & 0.482 \\
+10\% & 0.544 & 31\% & 0.476 \\
+11\% & 0.548 & 32\% & 0.471 \\
+12\% & 0.550 & 33\% & 0.466 \\
+\textbf{13\%} & \textbf{0.551} & 34\% & 0.461 \\
+14\% & 0.551 & 35\% & 0.456 \\
+15\% & 0.549 & 36\% & 0.451 \\
+16\% & 0.548 & 37\% & 0.446 \\
+17\% & 0.545 & 38\% & 0.441 \\
+18\% & 0.542 & 39\% & 0.436 \\
+19\% & 0.538 & 40\% & 0.432 \\
+20\% & 0.534 &  &  \\
+\hline
+\end{tabular}
+\caption{Critical hit probability optimization results}
+\end{table}
+
+This optimization demonstrates the framework's ability to discover non-obvious parameter values that maximize engagement, validating its utility for systematic game design.
 
 
 \begin{thebibliography}{1}
+
+\bibitem{abeele2020pxi}
+Vero Abeele, Katta Spiel, Lennart Nacke, Daniel Johnson, and Kathrin Gerling.
+\newblock Development and validation of the player experience inventory: A scale to measure player experiences at the level of functional and psychosocial consequences.
+\newblock {\em International Journal of Human-Computer Studies}, 135:102370, 2020.
+
+\bibitem{arrasvuori2010plex}
+Juha Arrasvuori, Hanna Boberg, Jonna Holopainen, Harri Korhonen, Annakaisa Lucero, and Mikael Salo.
+\newblock Applying the {PLEX} framework in designing for playfulness.
+\newblock In {\em Proceedings of the 2010 Annual Conference Extended Abstracts on Human Factors in Computing Systems}, pages 4149--4154, 2010.
 
 \bibitem{csikszentmihalyi1990flow}
 Mihaly Csikszentmihalyi.
 \newblock {\em Flow: The Psychology of Optimal Experience}.
 \newblock Harper \& Row, New York, 1990.
+
+\bibitem{sweetser2005gameflow}
+Penelope Sweetser and Peta Wyeth.
+\newblock {GameFlow}: A model for evaluating player enjoyment in games.
+\newblock {\em Computers in Entertainment}, 3(3):1--24, 2005.
 
 \end{thebibliography}
 

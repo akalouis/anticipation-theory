@@ -573,16 +573,21 @@ int main()
 		cointoss,
 		hpgame,
 		hpgame_interactive,
+		hpgame_rage,
+		hpgame_rage_optimize_critchance,
+
 	};
 
-	switch (hpgame) // change this to run different programs
+	//return hpgame_rage_find_optimal_critchance();
+
+	switch (hpgame_rage_optimize_critchance) // change this to run different programs
 	{
 	case rock_paper_scissors: return rps_program();
 	case cointoss: return cointoss_program();
 	case hpgame: return hpgame_program();
 	case hpgame_interactive: return hpgame_interactive_program();
-		//return hpgame_rage_analyze_program();
-		//return hpgame_rage_find_optimal_critchance();
+	case hpgame_rage: return hpgame_rage_analyze_program();
+	case hpgame_rage_optimize_critchance: return hpgame_rage_find_optimal_critchance();
 		//return hpgame_rage_compare_mechanics();
 		//return experiment_hpgame_rage_find_optimal_crit_per_config();
 		//return lanegame_analyze_program();
