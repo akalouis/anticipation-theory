@@ -131,7 +131,7 @@ export namespace game
 
 			});
 		printf("Most fun moments(sorted by A1+A2+A3+A4+A5)\n");
-		printf("Player1.Hp\tPlayer2.Hp\tD_local\tD_global\tA1\tA2\tA3\tA4\tA5\n");
+		printf("Player1.Hp\tPlayer2.Hp\tD_local\tD_global\tA1\tA2\tA3\tA4\tA5\tSUM\n");
 		for (const auto& state : states_sorted_by_a12345)
 		{
 			auto& node = stateNodes[state];
@@ -140,9 +140,12 @@ export namespace game
 			auto& node4 = stateNodes4[state];
 			auto& node5 = stateNodes5[state];
 			if (node.a > 0.0f)
-				printf("%d\t\t%d\t\t%.2f\t%.2f\t\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+				printf("%d\t\t%d\t\t%.2f\t%.2f\t\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
 					state.hp1, state.hp2, node.d_local, node.d_global,
-					node.a, node2.a, node3.a, node4.a, node5.a);
+					node.a, node2.a, node3.a, node4.a, node5.a,
+					node.a + node2.a + node3.a + node4.a + node5.a
+					
+				);
 		}
 	}
 

@@ -2,6 +2,7 @@
 \usepackage{arxiv}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{hyperref}
+\usepackage{float}
 
 % Theorem environments
 \newtheorem{definition}{Definition}
@@ -164,7 +165,6 @@ The coin toss represents the solution to the optimization problem:
 $$\max_{p \in [0,1]} \sqrt{p(1-p)}$$
 
 
-
 \section{Expansion of the Framework}
 \subsection{Multi-Turn Games}
 
@@ -270,21 +270,11 @@ Computer-assisted approaches offer systematic solutions to these limitations. By
 
 We have shown the dynamic programming algorithms for computing nested components in $O(|S|)$ time for each component in above sections. Optimization of game design in this manner is readily feasible.
 
-\section{Limitations and Scope}
 
-This framework is best suited to games with well-defined objectives. It works well for competitive games with clear win conditions, especially competitive MOBAs, but performs poorly for games like Minecraft where exact win conditions don't exist.
 
-Additionally, real games operate in real-time with prohibitively large state spaces. Practical application requires building idealized and simplified models for computational feasibility.
 
-\section{Conclusion}
 
-Based on observations that engagement emerges from uncertainty about meaningful outcomes, we derived the Local Anticipation formulation as the core of our framework. We proved that the optimal single-turn game under canonical settings is the fair coin toss, achieving maximum anticipation of 0.5.
-
-We explored various extensions of the framework, including multi-turn games and nested anticipation components. The hierarchical decomposition of anticipation was especially notable, revealing interesting properties that match observed principles of game design and narrative structure.
-
-Also, our experimentation shows promising results in using the framework as a design tool.
-
-\section{Applications}
+\section{Experiments}
 \subsection{HpGame}
 
 HpGame models a simplified 1v1 fighting game where each player has health points and can attack with hit/miss probability. Players alternate turns until one reaches zero health.
@@ -298,34 +288,44 @@ P(\text{Player 1 misses, Player 2 hits}) &= \frac{1}{3}
 Each successful hit deals 1 damage.
 
 \textbf{Results}:
-
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
 Player1 HP & Player2 HP & $A_1$ & $A_2$ & $A_3$ & $A_4$ & $A_5$ & Sum \\
 \hline
-2 & 1 & 0.31 & 0.22 & 0.00 & 0.00 & 0.00 & 0.53 \\
+2 & 1 & 0.31 & 0.22 & 0.00 & 0.00 & 0.00 & 0.54 \\
+3 & 5 & 0.09 & 0.23 & 0.12 & 0.06 & 0.03 & 0.53 \\
+4 & 2 & 0.12 & 0.24 & 0.08 & 0.03 & 0.02 & 0.50 \\
+5 & 3 & 0.12 & 0.24 & 0.06 & 0.07 & 0.02 & 0.50 \\
+4 & 5 & 0.14 & 0.20 & 0.04 & 0.08 & 0.02 & 0.48 \\
+3 & 2 & 0.22 & 0.18 & 0.03 & 0.05 & 0.00 & 0.48 \\
 1 & 1 & 0.47 & 0.00 & 0.00 & 0.00 & 0.00 & 0.47 \\
-2 & 2 & 0.28 & 0.07 & 0.10 & 0.00 & 0.00 & 0.45 \\
+5 & 2 & 0.05 & 0.19 & 0.18 & 0.02 & 0.02 & 0.47 \\
+2 & 4 & 0.08 & 0.21 & 0.13 & 0.03 & 0.02 & 0.46 \\
+3 & 4 & 0.15 & 0.22 & 0.02 & 0.07 & 0.01 & 0.46 \\
+2 & 2 & 0.28 & 0.07 & 0.10 & 0.00 & 0.00 & 0.46 \\
+4 & 3 & 0.18 & 0.16 & 0.06 & 0.05 & 0.01 & 0.45 \\
+5 & 4 & 0.16 & 0.14 & 0.08 & 0.04 & 0.02 & 0.44 \\
+2 & 3 & 0.16 & 0.23 & 0.00 & 0.05 & 0.00 & 0.44 \\
+3 & 1 & 0.10 & 0.22 & 0.10 & 0.00 & 0.00 & 0.43 \\
 \hline
 \end{tabular}
-\caption{Most engaging game states in baseline HpGame}
+\caption{Most engaging game states in HpGame}
 \end{table}
-
 \textbf{Game Design Score}: 0.176 ($A_1$ metric), 0.430 (sum $A_1$\textasciitilde$A_5$)
 
-Analysis reveals the most engaging moments occur at close HP values with moderate win probabilities. The highest individual $A_1$ values occur at equal HP states (coin-toss game). The reason why $A_1$ is not 0.5 is because win probability is not exactly 0.5 due to the both attack (draw) scenario.
+Most engaging moments occur at close HP values with moderate win probabilities. The highest individual $A_1$ values occur at 1, 1 HP states (coin-toss game). The reason why $A_1$ is not 0.5 is because win probability is not exactly 0.5 due to the both attack (draw) scenario.
 
 Also, it is remarkable that the sum of $A_1$\textasciitilde$A_5$ can exceed 0.5, as shown in the first row. This observation suggests potential for an unbounded conjecture regarding hierarchical anticipation components.
 
-Note that Game Design Score(GDS) is averaged $A_1$-$A_5$ over all states, weighted by respective state's reachability from the initial state.
+Note that Game Design Score (GDS) is averaged $A_1$-$A_5$ over all states, weighted by respective state's reachability from the initial state.
 
 \subsection{HpGame\_Rage}
 
 We expanded HpGame with new ``rage/crit'' mechanics. This rage/crit system yielded the highest GDS in our trials.
 
-\textbf{Rage System}: 
+\textbf{Rage/Crit System}: 
 \begin{itemize}
 \item Rage accumulates when dealing or receiving damage
 \item Critical hits deal additional damage: $\text{damage} = 1 + (\text{rage} \times \text{rage\_multiplier})$ (default multiplier is 1)
@@ -350,65 +350,50 @@ Note that we don't have both miss scenario to prevent cyclic states. This missin
 \end{align}
 
 \textbf{Results}:
-
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
 \hline
-HP$_1$ & HP$_2$ & Rage$_1$ & Rage$_2$ & $A_1$ & $A_2$ & $A_3$ & $A_4$ & $A_5$ & Sum \\
+P1 HP & P2 HP & P1 Rage & P2 Rage & $A_1$ & $A_2$ & $A_3$ & $A_4$ & $A_5$ & Sum \\
 \hline
 4 & 3 & 2 & 3 & 0.26 & 0.31 & 0.22 & 0.11 & 0.04 & 0.94 \\
-3 & 4 & 3 & 3 & 0.27 & 0.30 & 0.21 & 0.11 & 0.03 & 0.92 \\
-3 & 3 & 4 & 4 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
-3 & 3 & 3 & 4 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
-3 & 3 & 3 & 2 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
-3 & 3 & 3 & 3 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
-3 & 3 & 2 & 3 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
-3 & 3 & 4 & 3 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.81 \\
-4 & 3 & 2 & 2 & 0.23 & 0.26 & 0.19 & 0.10 & 0.04 & 0.82 \\
-4 & 3 & 3 & 2 & 0.23 & 0.26 & 0.19 & 0.10 & 0.04 & 0.82 \\
-5 & 3 & 2 & 2 & 0.18 & 0.24 & 0.21 & 0.13 & 0.06 & 0.82 \\
+4 & 3 & 3 & 3 & 0.26 & 0.31 & 0.22 & 0.11 & 0.04 & 0.94 \\
+3 & 4 & 3 & 3 & 0.27 & 0.30 & 0.21 & 0.11 & 0.03 & 0.91 \\
+3 & 4 & 3 & 2 & 0.27 & 0.30 & 0.21 & 0.11 & 0.03 & 0.91 \\
+3 & 3 & 4 & 4 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.82 \\
+3 & 3 & 3 & 4 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.82 \\
+3 & 3 & 3 & 2 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.82 \\
+3 & 3 & 3 & 3 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.82 \\
+3 & 3 & 2 & 3 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.82 \\
+3 & 3 & 4 & 3 & 0.27 & 0.29 & 0.17 & 0.06 & 0.02 & 0.82 \\
+4 & 3 & 2 & 2 & 0.23 & 0.26 & 0.19 & 0.10 & 0.04 & 0.81 \\
+4 & 3 & 3 & 2 & 0.23 & 0.26 & 0.19 & 0.10 & 0.04 & 0.81 \\
+5 & 3 & 2 & 2 & 0.18 & 0.24 & 0.21 & 0.13 & 0.06 & 0.81 \\
 4 & 2 & 2 & 3 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
 4 & 2 & 4 & 4 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
-4 & 2 & 3 & 4 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
-4 & 2 & 4 & 3 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
-4 & 2 & 3 & 3 & 0.28 & 0.25 & 0.16 & 0.06 & 0.02 & 0.77 \\
-3 & 5 & 2 & 2 & 0.14 & 0.23 & 0.19 & 0.12 & 0.06 & 0.74 \\
-3 & 4 & 2 & 2 & 0.20 & 0.23 & 0.18 & 0.10 & 0.03 & 0.74 \\
-3 & 4 & 2 & 3 & 0.20 & 0.23 & 0.18 & 0.10 & 0.03 & 0.74 \\
-2 & 4 & 3 & 3 & 0.29 & 0.22 & 0.15 & 0.06 & 0.02 & 0.74 \\
 \hline
 \end{tabular}
 \caption{Top engaging states with rage mechanics}
 \end{table}
 
-\begin{table}[h]
-\centering
-\begin{tabular}{|c|c|c|c|}
-\hline
-Game & $A_1$ Score & Sum($A_1$\textasciitilde$A_5$) & Improvement \\
-\hline
-HpGame & 0.176 & 0.430 & -- \\
-HpGame\_Rage & 0.199 & 0.544 & +26.5\% \\
-\hline
-\end{tabular}
-\caption{Performance comparison: HpGame vs. HpGame\_Rage}
-\end{table}
+\textbf{Game Design Score}: 0.199 ($A_1$ metric), 0.544 (sum $A_1$\textasciitilde$A_5$)
 
-TBD the analysis
+We achieve a significant increase in GDS (0.430 $\rightarrow$ 0.544, +26.5\% improvement). The rage system produces significantly higher components like $A_4$ and $A_5$, indicating enhanced multi-turn anticipation depth.
+
+\textbf{State Analysis}: The (4,3,2,3) state achieves 0.94 total anticipation (0.26 + 0.31 + 0.22 + 0.11 + 0.04) because it represents an effective match point where both players could eliminate each other with one critical hit. This creates immediate tension while preserving multiple branching possibilities, resulting in a balanced combination of action-packed immediacy and long-term strategic depth.
+
+Similarly, the (5,3,2,2) state is also notable. While the 5 HP player faces lower immediate risk (therefore slightly lower $A_1$), one critical hit can dramatically shift the game balance. In other words, this state indicates potential unpredictable turn-overs and branches in the long term, reflected by higher $A_4$ and $A_5$ components.
+
+It is notable that slightly asymmetric balance creates generally more engaging states. This occurs because when a player is slightly behind or ahead and one event can shift the balance, each action feels more meaningful—winning this exchange means taking the upper hand, creating a sense of consequential momentum.
+
+This provides remarkable empirical validation of our theoretical framework. As established in the hierarchical decomposition, higher-order components effectively capture narrative structure elements such as dramatic swings, strategic branches, and long-term tension arcs. The rage system's ability to naturally elevate these components demonstrates how well-designed mechanics can enhance engagement across multiple temporal scales simultaneously.
 
 \subsection{Parameter Optimization}
 
 We optimized the critical hit chance in HpGame\_Rage to maximize engagement. Optimization was performed by simple brute-force search over 1\% increments from 0\% to 40\% critical hit chance.
 
-\textbf{Key Findings}:
-\begin{itemize}
-\item \textbf{Optimal critical chance: 13\%} (score: 0.551)
-\item Clear inverted-U relationship, not monotonic
-\item Engagement degrades beyond 15\% critical chance
-\end{itemize}
-
-\begin{table}[h]
+\textbf{Results}:
+\begin{table}[H]
 \centering
 \begin{tabular}{|c|c||c|c|}
 \hline
@@ -440,8 +425,47 @@ Critical \% & GDS & Critical \% & GDS \\
 \caption{Critical hit probability optimization results}
 \end{table}
 
+We've found that the optimal critical hit chance was 13\%. Also, inverted-U relationship is observed.
+It is because, if the critical hit chance is too low, the game becomes continuously equal to just HpGame (from hpgame rage).
+
+if the critical hit chance is too high, small consequences like 1 hp different is contuously mattering less and less.
+Also, this is a practical proof of using computer assisted optimization of paramters.
+
+While it is somehow intuitively possible to guess that 10~15\% must be sweet spot of crit chance with some tests and blah,
+it is clearly beyond what intuition can xxx to guess that 13\% was the optimal value. without this kind of systematic optimization.
+
+This proves this as a practicalilty of this framework. 
+
+\begin{itemize}
+\item \textbf{Optimal critical chance: 13\%} (score: 0.551)
+\item Clear inverted-U relationship, not monotonic
+\item Engagement degrades beyond 15\% critical chance
+\end{itemize}
+
+
 This optimization demonstrates the framework's ability to discover non-obvious parameter values that maximize engagement, validating its utility for systematic game design.
 
+\section{Conclusion}
+
+We have demonstrated that HpGame\_Rage is +26.5\% superior to HpGame, with a mathematically validated Game Design Score comparison (0.544 vs. 0.430). This represents a significant achievement, as it provides objective, quantitative evidence rather than subjective opinion.
+
+We have successfully demonstrated the development of novel game mechanics for 1v1 fighting games using our framework. We developed and validated new ``rage/crit'' mechanics with unprecedented design certainty, eliminating the need for extensive playtesting and actual implementation during the conceptual phase.
+
+For nested anticipation, we observe that higher-order anticipation components ($A_4$, $A_5$) in HpGame\_Rage effectively capture narrative structure and meaningful long-term strategic branches. This provides empirical validation for our nested anticipation decomposition approach, demonstrating that the framework successfully quantifies multi-temporal engagement layers.
+
+Furthermore, we gained new insights through systematic state space analysis, such as discovering that ``slightly asymmetric game states generate superior engagement compared to perfectly balanced scenarios.'' These findings transform previously intuitive design principles into mathematically verified conclusions.
+
+Lastly, we demonstrated systematic optimization of critical hit chance, further improving the Game Design Score from 0.544 to 0.551 (+1.3\% improvement) by adjusting the parameter from 10\% to 13\%. This serves as a practical example of applying our framework to optimize game mechanics and parameters, yielding directly applicable design insights.
+
+To achieve equivalent optimization without this framework, one would need to conduct extensive large-scale statistical studies with hundreds of players and fully playable prototypes---clearly impractical for the numerous micro-design decisions required in modern game development environments.
+
+This establishes our framework as a potentially transformative tool for game development, enabling mathematical and objective design evaluation without traditional dependencies on costly playtesting cycles. In today's saturated gaming market, where innovation often relies on incremental genre mixing, this framework offers substantial potential to break through current design limitations by providing systematic methods for discovering and validating truly novel mechanics.
+
+\section{Limitations and Scope}
+
+This framework is best suited to games with well-defined objectives. It works well for competitive games with clear win conditions, especially competitive MOBAs, but performs poorly for games like Minecraft where exact win conditions don't exist.
+
+Additionally, real games operate in real-time with prohibitively large state spaces. Practical application requires building idealized and simplified models for computational feasibility.
 
 \begin{thebibliography}{1}
 
