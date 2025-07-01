@@ -33,8 +33,8 @@ Provides a **non‑subjective**, **optimizable**, and **analytically tractable**
 
 ### Core Foundation
 
-$$\mu = \sum_{s'} P(s \to s') \cdot D_{global}(s')$$
-$$A_1(s) = \sqrt{\sum_{s'} P(s \to s') \cdot (D_{global}(s') - \mu)^2}$$
+$$\mu = \sum_{s'} P(s \to s') \cdot D(s')$$
+$$A_1(s) = \sqrt{\sum_{s'} P(s \to s') \cdot (D(s') - \mu)^2}$$
 
 This is the Local Anticipation formula, the core foundation of anticipation theory. Global and nested values are just algorithmic expansion of this (dynamic programming and recursion).
 
@@ -65,4 +65,6 @@ MIT License. See [LICENSE](./LICENSE) for details.
 
 ## Contact
 
-For consulting inquiries & offers: IGFrYS5sb3VpcyBhdCBvdXRsb29rIGRvdCBjb20g (base64)
+For consulting inquiries & offers:
+
+aka.louis [at] outlook [dot] com

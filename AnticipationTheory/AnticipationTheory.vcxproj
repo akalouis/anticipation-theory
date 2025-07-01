@@ -135,6 +135,7 @@
     <ClCompile Include="hpgame_rage.ixx" />
     <ClCompile Include="hpgame.ixx" />
     <ClCompile Include="rps_game.ixx" />
+    <ClCompile Include="two_turn_game.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lanegame.ixx" />

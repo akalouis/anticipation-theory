@@ -21,8 +21,8 @@ int rps_program()
 
 	printf("note: rps_game is a benchmark model for single-step games with perfect information.\n"
 		"  1. very high A1 (0.471...). this is indeed a good game.\n"
-		"  2. achieves 94.2%% of theoretical maximum (0.5) for single-step binary games.\n"
-		"  3. zero A2~A5, since there's no long term anticipation. just immediate results.\n"
+		"  2. achieves 94.2%% of theoretical maximum (0.5) for single-step games.\n"
+		"  3. zero A2~A5, since there's no long term anticipation.\n"
 	);
 	return 0;
 }
@@ -51,14 +51,14 @@ int hpgame_program()
 	auto analysis4 = game::analyze<hpgame::State>([&](const hpgame::State& s) {return analysis3.stateNodes[s].a; });
 	auto analysis5 = game::analyze<hpgame::State>([&](const hpgame::State& s) {return analysis4.stateNodes[s].a; });
 
-	game::hpgame_dump_most_fun_moments(analysis.states, analysis.stateNodes);
-	game::hpgame_dump_most_fun_moments(analysis2.states, analysis2.stateNodes);
-	game::hpgame_dump_most_fun_moments(analysis3.states, analysis3.stateNodes);
-	game::hpgame_dump_most_fun_moments(analysis4.states, analysis4.stateNodes);
-	game::hpgame_dump_most_fun_moments(analysis5.states, analysis5.stateNodes);
+	//game::hpgame_dump_most_fun_moments(analysis.states, analysis.stateNodes);
+	//game::hpgame_dump_most_fun_moments(analysis2.states, analysis2.stateNodes);
+	//game::hpgame_dump_most_fun_moments(analysis3.states, analysis3.stateNodes);
+	//game::hpgame_dump_most_fun_moments(analysis4.states, analysis4.stateNodes);
+	//game::hpgame_dump_most_fun_moments(analysis5.states, analysis5.stateNodes);
 	game::hpgame_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes, analysis2.stateNodes, analysis3.stateNodes, analysis4.stateNodes, analysis5.stateNodes);
 
-	printf("Game design score: %f\n", analysis.game_design_score);
+	printf("Game design score(A1): %f\n", analysis.game_design_score);
 	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score +
 		analysis2.game_design_score +
 		analysis3.game_design_score +
@@ -114,14 +114,14 @@ int hpgame_rage_analyze_program()
 	auto analysis3 = game::analyze<hpgame_rage::State>([&](const hpgame_rage::State& s) {return analysis2.stateNodes[s].a; });
 	auto analysis4 = game::analyze<hpgame_rage::State>([&](const hpgame_rage::State& s) {return analysis3.stateNodes[s].a; });
 	auto analysis5 = game::analyze<hpgame_rage::State>([&](const hpgame_rage::State& s) {return analysis4.stateNodes[s].a; });
-	game::hpgame_rage_dump_most_fun_moments(analysis.states, analysis.stateNodes);
-	game::hpgame_rage_dump_most_fun_moments(analysis2.states, analysis2.stateNodes);
-	game::hpgame_rage_dump_most_fun_moments(analysis3.states, analysis3.stateNodes);
-	game::hpgame_rage_dump_most_fun_moments(analysis4.states, analysis4.stateNodes);
-	game::hpgame_rage_dump_most_fun_moments(analysis5.states, analysis5.stateNodes);
+	//game::hpgame_rage_dump_most_fun_moments(analysis.states, analysis.stateNodes);
+	//game::hpgame_rage_dump_most_fun_moments(analysis2.states, analysis2.stateNodes);
+	//game::hpgame_rage_dump_most_fun_moments(analysis3.states, analysis3.stateNodes);
+	//game::hpgame_rage_dump_most_fun_moments(analysis4.states, analysis4.stateNodes);
+	//game::hpgame_rage_dump_most_fun_moments(analysis5.states, analysis5.stateNodes);
 	game::hpgame_rage_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes, analysis2.stateNodes, analysis3.stateNodes, analysis4.stateNodes, analysis5.stateNodes);
 
-	printf("Game design score: %f\n", analysis.game_design_score);
+	printf("Game design score(A1): %f\n", analysis.game_design_score);
 	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score +
 		analysis2.game_design_score +
 		analysis3.game_design_score +
@@ -158,7 +158,7 @@ int hpgame_rage_find_optimal_critchance()
 	hpgame_dump_most_fun_moments(analysis.states, analysis.stateNodes);
 	return 0;
 }
-int hpgame_rage_compare_mechanics()
+int hpgame_rage_compare_mechanics_program()
 {
 	printf("[hpgame_rage] Comparing different rage mechanics configurations...\n\n");
 
@@ -167,7 +167,7 @@ int hpgame_rage_compare_mechanics()
 
 	// Configuration 1: Original (accumulating rage from both attack and defense)
 	hpgame_rage::GameParams config1;
-	config1.critical_chance = 0.11f;
+	config1.critical_chance = 0.13f;
 	config1.rage_spendable = false;
 	config1.rage_dmg_multiplier = 1;
 	config1.rage_increase_on_attack_dmg = true;
@@ -176,7 +176,7 @@ int hpgame_rage_compare_mechanics()
 
 	// Configuration 2: Spendable rage
 	hpgame_rage::GameParams config2;
-	config2.critical_chance = 0.11f;
+	config2.critical_chance = 0.13f;
 	config2.rage_spendable = true;
 	config2.rage_dmg_multiplier = 1;
 	config2.rage_increase_on_attack_dmg = true;
@@ -185,7 +185,7 @@ int hpgame_rage_compare_mechanics()
 
 	// Configuration 3: Offensive rage only (increase only when dealing damage)
 	hpgame_rage::GameParams config3;
-	config3.critical_chance = 0.11f;
+	config3.critical_chance = 0.13f;
 	config3.rage_spendable = false;
 	config3.rage_dmg_multiplier = 1;
 	config3.rage_increase_on_attack_dmg = true;
@@ -194,7 +194,7 @@ int hpgame_rage_compare_mechanics()
 
 	// Configuration 4: Defensive rage only (increase only when receiving damage)
 	hpgame_rage::GameParams config4;
-	config4.critical_chance = 0.11f;
+	config4.critical_chance = 0.13f;
 	config4.rage_spendable = false;
 	config4.rage_dmg_multiplier = 1;
 	config4.rage_increase_on_attack_dmg = false;
@@ -203,7 +203,7 @@ int hpgame_rage_compare_mechanics()
 
 	// Configuration 5: Spendable offensive rage
 	hpgame_rage::GameParams config5;
-	config5.critical_chance = 0.11f;
+	config5.critical_chance = 0.13f;
 	config5.rage_spendable = true;
 	config5.rage_dmg_multiplier = 1;
 	config5.rage_increase_on_attack_dmg = true;
@@ -212,7 +212,7 @@ int hpgame_rage_compare_mechanics()
 
 	// Configuration 6: Spendable defensive rage
 	hpgame_rage::GameParams config6;
-	config6.critical_chance = 0.11f;
+	config6.critical_chance = 0.13f;
 	config6.rage_spendable = true;
 	config6.rage_dmg_multiplier = 1;
 	config6.rage_increase_on_attack_dmg = false;
@@ -221,7 +221,7 @@ int hpgame_rage_compare_mechanics()
 
 	// Configuration 7: Higher damage multiplier
 	hpgame_rage::GameParams config7;
-	config7.critical_chance = 0.11f;
+	config7.critical_chance = 0.13f;
 	config7.rage_spendable = false;
 	config7.rage_dmg_multiplier = 2;
 	config7.rage_increase_on_attack_dmg = true;
@@ -230,7 +230,7 @@ int hpgame_rage_compare_mechanics()
 
 	// Configuration 8: Spendable high multiplier rage
 	hpgame_rage::GameParams config8;
-	config8.critical_chance = 0.11f;
+	config8.critical_chance = 0.13f;
 	config8.rage_spendable = true;
 	config8.rage_dmg_multiplier = 2;
 	config8.rage_increase_on_attack_dmg = true;
@@ -296,8 +296,11 @@ int hpgame_rage_compare_mechanics()
 	// Show detailed analysis of best configuration
 	hpgame_rage::State::params = configs[best_config - 1];
 	auto best_analysis = game::analyze_hpgame_rage();
+	// game design score
+	printf("Best configuration game design score: %.6f\n", best_analysis.game_design_score);
 
-	printf("\nDetailed configuration %zu:\n", best_config);
+
+	printf("\nBest configuration %zu:\n", best_config);
 	printf("Critical Hit: %.2f%%\n", configs[best_config - 1].critical_chance * 100);
 	printf("Spend Rage on Critical: %s\n", configs[best_config - 1].rage_spendable ? "Yes" : "No");
 	printf("Rage Damage Multiplier: %d\n", configs[best_config - 1].rage_dmg_multiplier);
@@ -306,6 +309,11 @@ int hpgame_rage_compare_mechanics()
 
 	printf("\nMost fun moments with best configuration (Config %zu):\n", best_config);
 	game::hpgame_rage_dump_most_fun_moments(best_analysis.states, best_analysis.stateNodes);
+
+	return 0;
+}
+int optimal_two_turn_game_program()
+{
 
 	return 0;
 }
@@ -575,12 +583,15 @@ int main()
 		hpgame_interactive,
 		hpgame_rage,
 		hpgame_rage_optimize_critchance,
+		hpgame_rage_compare_mechanics,
+		optimal_two_turn_game,
 
 	};
 
 	//return hpgame_rage_find_optimal_critchance();
+	//return experiment_hpgame_rage_find_optimal_crit_per_config();
 
-	switch (hpgame_rage_optimize_critchance) // change this to run different programs
+	switch (hpgame_rage_compare_mechanics) // change this to run different programs
 	{
 	case rock_paper_scissors: return rps_program();
 	case cointoss: return cointoss_program();
@@ -588,7 +599,8 @@ int main()
 	case hpgame_interactive: return hpgame_interactive_program();
 	case hpgame_rage: return hpgame_rage_analyze_program();
 	case hpgame_rage_optimize_critchance: return hpgame_rage_find_optimal_critchance();
-		//return hpgame_rage_compare_mechanics();
+	case hpgame_rage_compare_mechanics: return hpgame_rage_compare_mechanics_program();
+	case optimal_two_turn_game: return optimal_two_turn_game_program();
 		//return experiment_hpgame_rage_find_optimal_crit_per_config();
 		//return lanegame_analyze_program();
 		//return lanegame_harvester_analyze_program();
