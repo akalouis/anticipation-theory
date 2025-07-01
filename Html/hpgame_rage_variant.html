@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>HPGAME_RAGE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;font-family:Arial;overflow:hidden;display:flex;justify-content:center;align-items:center;min-height:100vh}
+canvas{border:3px solid #0f0;background:linear-gradient(180deg,#87CEEB 0%,#2F4F2F 70%,#8B4513 100%)}
+.ui{position:absolute;top:10px;left:10px;right:10px;z-index:10;color:#fff;font-weight:bold}
+.player-info{display:flex;justify-content:space-between;font-size:18px;margin-bottom:10px}
+.health-bar{width:280px;height:25px;background:#333;border:2px solid #fff;margin:5px;position:relative}
+.health-fill{height:100%;background:linear-gradient(90deg,#0f0,#ff0,#f00);transition:width .3s;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000;font-size:14px}
+.rage-bar{width:280px;height:20px;background:#333;border:2px solid #f80;margin:5px;position:relative}
+.rage-fill{height:100%;background:linear-gradient(90deg,#f80,#f40);transition:width .3s;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000;font-size:12px}
+.player-stats{display:flex;flex-direction:column}
+.health-bars{display:flex;justify-content:space-between}
+.attack-buttons{position:absolute;bottom:30px;left:20%;transform:translateX(-50%);display:flex;gap:15px}
+.attack-btn{padding:15px 25px;font-size:18px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;color:#fff;transition:all .1s}
+.attack-btn:hover{transform:translateY(-2px)}
+.attack-left{background:linear-gradient(45deg,#f6b,#f85)}
+.attack-right{background:linear-gradient(45deg,#4ec,#4a8)}
+.game-over{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:none;justify-content:center;align-items:center;z-index:1000}
+.game-over-content{background:#222;border:3px solid #fd0;border-radius:15px;padding:40px;text-align:center;color:#fff}
+.game-over-title{font-size:48px;margin-bottom:20px;color:#fd0}
+.restart-btn{padding:15px 30px;font-size:18px;background:linear-gradient(45deg,#4c5,#4a9);color:#fff;border:none;border-radius:10px;cursor:pointer;margin-top:20px}
+.game-title{position:absolute;top:50px;left:50%;transform:translateX(-50%);font-size:16px;color:#fff;font-weight:bold;text-align:center}
+.game-title small{font-size:12px;color:#ffcc00;font-weight:normal}
+</style>
+</head>
+<body>
+<canvas id="canvas" width="800" height="600"></canvas>
+<div class="ui">
+<div class="player-info">
+<div>PLAYER 1</div>
+<div class="game-title">HpGame_Rage | nospend | on_dmg+on_recvdmg | critchance:13% critdmg:(1+rage*2) | GameDesignScore:0.653412<br><small>note: +51.7857% engaging than HpGame</small></div>
+<div>PLAYER 2 (AI)</div>
+</div>
+<div class="health-bars">
+<div class="player-stats">
+<div class="health-bar"><div class="health-fill" id="hp1">5/5</div></div>
+<div class="rage-bar"><div class="rage-fill" id="rage1">Rage: 0</div></div>
+</div>
+<div class="player-stats">
+<div class="health-bar"><div class="health-fill" id="hp2">5/5</div></div>
+<div class="rage-bar"><div class="rage-fill" id="rage2">Rage: 0</div></div>
+</div>
+</div>
+</div>
+<div class="attack-buttons">
+<button class="attack-btn attack-left" onclick="attack()">⚔️ ATTACK LEFT</button>
+<button class="attack-btn attack-right" onclick="attack()">⚔️ ATTACK RIGHT</button>
+</div>
+<div class="game-over" id="gameOver">
+<div class="game-over-content">
+<div class="game-over-title" id="title">YOU WIN!</div>
+<div id="message">Victory message</div>
+<button class="restart-btn" onclick="restart()">🔄 PLAY AGAIN</button>
+</div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const hp1 = document.getElementById('hp1');
+const hp2 = document.getElementById('hp2');
+const rage1 = document.getElementById('rage1');
+const rage2 = document.getElementById('rage2');
+const gameOver = document.getElementById('gameOver');
+const title = document.getElementById('title');
+const message = document.getElementById('message');
+const audio = new(window.AudioContext || window.webkitAudioContext)();
+
+let gameState = {
+    player1: {x: 150, y: 400, hp: 5, rage: 0, attacking: false, cooldown: 0, lastAction: ''},
+    player2: {x: 550, y: 400, hp: 5, rage: 0, attacking: false, cooldown: 0, lastAction: ''},
+    particles: [],
+    textEffects: [],
+    screenShake: 0,
+    gameOver: false
+};
+
+// HpGame_RAGE Parameters
+const CRITICAL_CHANCE = 0.13;
+const HIT_CHANCE = 0.435; // Calculated to balance probabilities  
+const MISS_CHANCE = 0.435; // Calculated to balance probabilities
+const RAGE_DAMAGE_MULTIPLIER = 2;
+
+// 8 Possible Outcomes (calculated from C++ implementation)
+function calculateOutcomes() {
+    const outcomes = [
+        {name: 'AttackAndMiss', prob: HIT_CHANCE * MISS_CHANCE, p1Action: 'hit', p2Action: 'miss'},
+        {name: 'CriticalAndMiss', prob: CRITICAL_CHANCE * MISS_CHANCE, p1Action: 'crit', p2Action: 'miss'},
+        {name: 'MissAndAttack', prob: MISS_CHANCE * HIT_CHANCE, p1Action: 'miss', p2Action: 'hit'},
+        {name: 'MissAndCritical', prob: MISS_CHANCE * CRITICAL_CHANCE, p1Action: 'miss', p2Action: 'crit'},
+        {name: 'AttackAndAttack', prob: HIT_CHANCE * HIT_CHANCE, p1Action: 'hit', p2Action: 'hit'},
+        {name: 'AttackAndCritical', prob: HIT_CHANCE * CRITICAL_CHANCE, p1Action: 'hit', p2Action: 'crit'},
+        {name: 'CriticalAndAttack', prob: CRITICAL_CHANCE * HIT_CHANCE, p1Action: 'crit', p2Action: 'hit'},
+        {name: 'CriticalAndCritical', prob: CRITICAL_CHANCE * CRITICAL_CHANCE, p1Action: 'crit', p2Action: 'crit'}
+    ];
+    
+    // Normalize probabilities (remove "both miss" and redistribute)
+    const totalProb = outcomes.reduce((sum, outcome) => sum + outcome.prob, 0);
+    outcomes.forEach(outcome => outcome.prob /= totalProb);
+    
+    return outcomes;
+}
+
+function playSound(freq, duration, type = 'sine') {
+    if (audio.state === 'suspended') audio.resume();
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    osc.connect(gain); gain.connect(audio.destination);
+    osc.frequency.value = freq; osc.type = type;
+    gain.gain.setValueAtTime(0.3, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + duration);
+    osc.start(); osc.stop(audio.currentTime + duration);
+}
+
+function createParticles(x, y, color, count = 15) {
+    for (let i = 0; i < count; i++) {
+        gameState.particles.push({
+            x, y, vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
+            life: 40, color, size: Math.random() * 6 + 3
+        });
+    }
+}
+
+function createTextEffect(x, y, text, color = '#fff') {
+    gameState.textEffects.push({x, y, text, color, life: 60});
+}
+
+function drawFighter(player, isP1) {
+    if (gameState.screenShake > 0) {
+        ctx.save();
+        ctx.translate(Math.random() * gameState.screenShake - gameState.screenShake/2, 
+                     Math.random() * gameState.screenShake - gameState.screenShake/2);
+    }
+    
+    // Draw rage aura BEHIND the character
+    if (player.rage > 0) {
+        // Multiple sine waves for complex beautiful flicker
+        const time = Date.now() * 0.002;
+        const primaryFlicker = Math.sin(time * 2) * 0.2 + 0.8; // Main pulse
+        const secondaryFlicker = Math.sin(time * 3.7) * 0.15 + 0.85; // Secondary rhythm
+        const tertiaryFlicker = Math.sin(time * 1.3) * 0.1 + 0.9; // Subtle variation
+        
+        // Base settings
+        const baseAlpha = 0.2;
+        const coreSize = 35 + player.rage * 4;
+        
+        // Beautiful overlapping rings with golden ratio spacing
+        const rings = [
+            {size: coreSize * 0.6, alpha: baseAlpha * 1.0, color: '#ffdd44', flicker: primaryFlicker},
+            {size: coreSize * 0.8, alpha: baseAlpha * 0.7, color: '#ffcc22', flicker: secondaryFlicker},
+            {size: coreSize * 1.0, alpha: baseAlpha * 0.5, color: '#ffbb00', flicker: tertiaryFlicker},
+            {size: coreSize * 1.25, alpha: baseAlpha * 0.35, color: '#ee9900', flicker: primaryFlicker * 0.8},
+            {size: coreSize * 1.55, alpha: baseAlpha * 0.25, color: '#dd8800', flicker: secondaryFlicker * 0.6}
+        ];
+        
+        // Draw rings from largest to smallest for proper layering
+        rings.reverse().forEach((ring, index) => {
+            // Only draw rings if rage level supports them
+            if (index < player.rage + 2) {
+                // Slight positional offset for organic feel
+                const offsetX = Math.sin(time + index) * 1.5;
+                const offsetY = Math.cos(time * 1.4 + index) * 1;
+                
+                ctx.globalAlpha = ring.alpha * ring.flicker;
+                ctx.fillStyle = ring.color;
+                
+                // Create soft edges with gradient
+                const gradient = ctx.createRadialGradient(
+                    player.x + offsetX, player.y - 50 + offsetY, ring.size * 0.3,
+                    player.x + offsetX, player.y - 50 + offsetY, ring.size
+                );
+                gradient.addColorStop(0, ring.color);
+                gradient.addColorStop(0.7, ring.color + '88'); // Semi-transparent
+                gradient.addColorStop(1, ring.color + '00'); // Fully transparent
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(player.x + offsetX, player.y - 50 + offsetY, ring.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+        
+        // Add sparkling particles for higher rage
+        if (player.rage >= 3) {
+            for (let i = 0; i < player.rage - 2; i++) {
+                const sparkleTime = time + i * 2;
+                const sparkleX = player.x + Math.sin(sparkleTime) * (coreSize * 0.8);
+                const sparkleY = player.y - 50 + Math.cos(sparkleTime * 1.3) * (coreSize * 0.8);
+                const sparkleAlpha = (Math.sin(sparkleTime * 6) + 1) * 0.3;
+                
+                ctx.globalAlpha = sparkleAlpha;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        ctx.globalAlpha = 1;
+    }
+    
+    // Draw character ON TOP of aura
+    ctx.fillStyle = isP1 ? '#0af' : '#f44';
+    ctx.fillRect(player.x - 25, player.y - 80, 50, 80);
+    ctx.beginPath();
+    ctx.arc(player.x, player.y - 90, 20, 0, Math.PI * 2);
+    ctx.fill();
+    
+    if (player.attacking) {
+        const ax = isP1 ? player.x + 40 : player.x - 40, ay = player.y - 40;
+        const isCrit = player.lastAction === 'crit';
+        
+        // Different effects for crit vs normal attack
+        ctx.strokeStyle = isCrit ? '#ff0' : '#fff';
+        ctx.lineWidth = isCrit ? 12 : 8;
+        ctx.lineCap = 'round';
+        
+        if (isCrit) {
+            ctx.shadowColor = '#ff0';
+            ctx.shadowBlur = 15;
+        }
+        
+        ctx.beginPath();
+        if (isP1) {
+            ctx.moveTo(ax - 30, ay - 20); ctx.lineTo(ax + 30, ay + 20);
+        } else {
+            ctx.moveTo(ax + 30, ay - 20); ctx.lineTo(ax - 30, ay + 20);
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        
+        // Speed effect lines
+        ctx.strokeStyle = isCrit ? '#fa0' : '#ccc';
+        ctx.lineWidth = isCrit ? 6 : 4;
+        for (let i = 0; i < (isCrit ? 5 : 3); i++) {
+            const offset = (i + 1) * 8;
+            ctx.beginPath();
+            if (isP1) {
+                ctx.moveTo(ax - 30 - offset, ay - 20 - offset);
+                ctx.lineTo(ax + 30 - offset, ay + 20 - offset);
+            } else {
+                ctx.moveTo(ax + 30 + offset, ay - 20 - offset);
+                ctx.lineTo(ax - 30 + offset, ay + 20 - offset);
+            }
+            ctx.stroke();
+        }
+    }
+    
+    // Health bar above fighter
+    const healthWidth = 60 * (player.hp / 5);
+    ctx.fillStyle = '#333';
+    ctx.fillRect(player.x - 30, player.y - 120, 60, 8);
+    ctx.fillStyle = player.hp > 2 ? '#0f0' : player.hp > 1 ? '#ff0' : '#f00';
+    ctx.fillRect(player.x - 30, player.y - 120, healthWidth, 8);
+    
+    // Rage indicator above health bar
+    if (player.rage > 0) {
+        const rageWidth = Math.min(60, player.rage * 10);
+        ctx.fillStyle = '#f80';
+        ctx.fillRect(player.x - 30, player.y - 135, rageWidth, 6);
+    }
+    
+    if (gameState.screenShake > 0) ctx.restore();
+}
+
+function updateEffects() {
+    gameState.particles.forEach((p, i) => {
+        const alpha = p.life / 40;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+        p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+        if (p.life <= 0) gameState.particles.splice(i, 1);
+    });
+    
+    ctx.globalAlpha = 1;
+    gameState.textEffects.forEach((t, i) => {
+        const alpha = t.life / 60;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = t.color;
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(t.text, t.x, t.y);
+        t.life--;
+        if (t.life <= 0) gameState.textEffects.splice(i, 1);
+    });
+    ctx.globalAlpha = 1;
+}
+
+function calculateDamage(attacker, action) {
+    if (action === 'miss') return 0;
+    if (action === 'hit') return 1;
+    if (action === 'crit') return 1 + attacker.rage * RAGE_DAMAGE_MULTIPLIER;
+    return 0;
+}
+
+function selectOutcome() {
+    const outcomes = calculateOutcomes();
+    
+    // Debug: Log probabilities (remove this later)
+    if (Math.random() < 0.01) { // Only log 1% of the time to avoid spam
+        console.log('Outcome probabilities:');
+        outcomes.forEach(o => console.log(`${o.name}: ${(o.prob * 100).toFixed(1)}%`));
+        
+        // Calculate total crit probability for each player
+        const p1CritProb = outcomes.filter(o => o.p1Action === 'crit').reduce((sum, o) => sum + o.prob, 0);
+        const p2CritProb = outcomes.filter(o => o.p2Action === 'crit').reduce((sum, o) => sum + o.prob, 0);
+        console.log(`P1 total crit chance: ${(p1CritProb * 100).toFixed(1)}%`);
+        console.log(`P2 total crit chance: ${(p2CritProb * 100).toFixed(1)}%`);
+    }
+    
+    const rand = Math.random();
+    let cumulative = 0;
+    
+    for (const outcome of outcomes) {
+        cumulative += outcome.prob;
+        if (rand < cumulative) {
+            return outcome;
+        }
+    }
+    return outcomes[outcomes.length - 1]; // fallback
+}
+
+function attack() {
+    if (gameState.gameOver || gameState.player1.cooldown > 0) return;
+    
+    const outcome = selectOutcome();
+    const p1Action = outcome.p1Action;
+    const p2Action = outcome.p2Action;
+    
+    gameState.player1.attacking = gameState.player2.attacking = true;
+    gameState.player1.cooldown = gameState.player2.cooldown = 40;
+    gameState.player1.lastAction = p1Action;
+    gameState.player2.lastAction = p2Action;
+    
+    // Calculate damage
+    const p1Damage = calculateDamage(gameState.player1, p1Action);
+    const p2Damage = calculateDamage(gameState.player2, p2Action);
+    
+    // Apply damage
+    gameState.player2.hp = Math.max(0, gameState.player2.hp - p1Damage);
+    gameState.player1.hp = Math.max(0, gameState.player1.hp - p2Damage);
+    
+    // Update rage (increases on both dealing and receiving damage)
+    if (p1Damage > 0) {
+        gameState.player1.rage++; // dealt damage
+        gameState.player2.rage++; // received damage
+    }
+    if (p2Damage > 0) {
+        gameState.player2.rage++; // dealt damage  
+        gameState.player1.rage++; // received damage
+    }
+    
+    // Create visual effects
+    if (p1Damage > 0) {
+        const color = p1Action === 'crit' ? '#ff0' : '#fa0';
+        createParticles(gameState.player2.x, gameState.player2.y - 40, color, p1Action === 'crit' ? 25 : 20);
+        createTextEffect(gameState.player2.x, gameState.player2.y - 150, 
+                        p1Action === 'crit' ? `CRIT -${p1Damage}` : `-${p1Damage}`, 
+                        p1Action === 'crit' ? '#ff0' : '#f44');
+    }
+    
+    if (p2Damage > 0) {
+        const color = p2Action === 'crit' ? '#ff0' : '#f66';
+        createParticles(gameState.player1.x, gameState.player1.y - 40, color, p2Action === 'crit' ? 25 : 20);
+        createTextEffect(gameState.player1.x, gameState.player1.y - 150, 
+                        p2Action === 'crit' ? `CRIT -${p2Damage}` : `-${p2Damage}`, 
+                        p2Action === 'crit' ? '#ff0' : '#f44');
+    }
+    
+    // Sound effects
+    if (p1Action === 'crit' || p2Action === 'crit') {
+        playSound(1200, 0.2, 'sawtooth'); gameState.screenShake = 20;
+    } else if (p1Damage > 0 || p2Damage > 0) {
+        playSound(800, 0.15, 'square'); gameState.screenShake = 10;
+    }
+    
+    updateDisplay();
+    checkGameOver();
+}
+
+function updateDisplay() {
+    // Health bars
+    const p1Percent = gameState.player1.hp * 20, p2Percent = gameState.player2.hp * 20;
+    hp1.style.width = p1Percent + '%'; hp2.style.width = p2Percent + '%';
+    hp1.textContent = gameState.player1.hp + '/5'; hp2.textContent = gameState.player2.hp + '/5';
+    
+    // Rage bars  
+    const maxRageDisplay = 10; // Max rage to display on bar
+    const rage1Percent = Math.min(gameState.player1.rage / maxRageDisplay * 100, 100);
+    const rage2Percent = Math.min(gameState.player2.rage / maxRageDisplay * 100, 100);
+    rage1.style.width = rage1Percent + '%'; rage2.style.width = rage2Percent + '%';
+    rage1.textContent = `Rage: ${gameState.player1.rage}`; rage2.textContent = `Rage: ${gameState.player2.rage}`;
+}
+
+function checkGameOver() {
+    if (gameState.player1.hp <= 0 || gameState.player2.hp <= 0) {
+        gameState.gameOver = true;
+        setTimeout(() => {
+            let resultTitle, resultMessage;
+            if (gameState.player1.hp > gameState.player2.hp) {
+                resultTitle = 'YOU WIN!'; 
+                resultMessage = `Victory! Final Rage: ${gameState.player1.rage}`;
+            } else if (gameState.player2.hp > gameState.player1.hp) {
+                resultTitle = 'YOU LOSE!'; 
+                resultMessage = `Defeated! AI Final Rage: ${gameState.player2.rage}`;
+            } else {
+                resultTitle = 'DRAW!'; 
+                resultMessage = `Both fighters fell! Rage: P1=${gameState.player1.rage}, P2=${gameState.player2.rage}`;
+            }
+            title.textContent = resultTitle; message.textContent = resultMessage;
+            gameOver.style.display = 'flex'; playSound(200, 1.5);
+        }, 1000);
+    }
+}
+
+function restart() {
+    gameState = {
+        player1: {x: 150, y: 400, hp: 5, rage: 0, attacking: false, cooldown: 0, lastAction: ''},
+        player2: {x: 550, y: 400, hp: 5, rage: 0, attacking: false, cooldown: 0, lastAction: ''},
+        particles: [], textEffects: [], screenShake: 0, gameOver: false
+    };
+    gameOver.style.display = 'none'; updateDisplay();
+}
+
+function gameLoop() {
+    if (gameState.player1.cooldown > 0) gameState.player1.cooldown--;
+    if (gameState.player2.cooldown > 0) gameState.player2.cooldown--;
+    if (!gameState.player1.cooldown) gameState.player1.attacking = false;
+    if (!gameState.player2.cooldown) gameState.player2.attacking = false;
+    if (gameState.screenShake > 0) gameState.screenShake--;
+    
+    ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fillRect(0, 0, 800, 600);
+    drawFighter(gameState.player1, true); drawFighter(gameState.player2, false);
+    updateEffects();
+    ctx.strokeStyle = '#654321'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(0, 400); ctx.lineTo(800, 400); ctx.stroke();
+    requestAnimationFrame(gameLoop);
+}
+
+updateDisplay(); gameLoop();
+document.addEventListener('click', () => audio.state === 'suspended' && audio.resume(), {once: true});
+</script>
+</body>
+</html>
