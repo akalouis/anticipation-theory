@@ -312,6 +312,98 @@ int hpgame_rage_compare_mechanics_program()
 
 	return 0;
 }
+int hpgame_rage_optimized_program()
+{
+	hpgame_rage::GameParams config;
+	config.critical_chance = 0.13f; // Example critical chance
+	config.rage_spendable = false; // Rage is not spent on critical hits
+	config.rage_dmg_multiplier = 2; // Rage damage multiplier
+	config.rage_increase_on_attack_dmg = true; // Increase rage when dealing damage
+	config.rage_increase_on_received_dmg = true; // Increase rage when receiving damage
+	hpgame_rage::State::params = config;
+	printf("[hpgame_rage] Analyzing optimized rage game...\n");
+	auto analysis = game::analyze_hpgame_rage();
+	auto analysis2 = game::analyze<hpgame_rage::State>([&](const hpgame_rage::State& s) { return analysis.stateNodes[s].a; });
+	auto analysis3 = game::analyze<hpgame_rage::State>([&](const hpgame_rage::State& s) { return analysis2.stateNodes[s].a; });
+	auto analysis4 = game::analyze<hpgame_rage::State>([&](const hpgame_rage::State& s) { return analysis3.stateNodes[s].a; });
+	auto analysis5 = game::analyze<hpgame_rage::State>([&](const hpgame_rage::State& s) { return analysis4.stateNodes[s].a; });
+	game::hpgame_rage_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes, analysis2.stateNodes, analysis3.stateNodes, analysis4.stateNodes, analysis5.stateNodes);
+	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score +
+		analysis2.game_design_score +
+		analysis3.game_design_score +
+		analysis4.game_design_score +
+		analysis5.game_design_score);
+	printf("Game design score(simulated, sum(A1~5)): %f\n", game::compute_gamedesign_score_simulation<hpgame_rage::State>(
+		[&](const hpgame_rage::State& s)
+		{
+			return analysis.stateNodes[s].a +
+				analysis2.stateNodes[s].a +
+				analysis3.stateNodes[s].a +
+				analysis4.stateNodes[s].a +
+				analysis5.stateNodes[s].a;
+		}
+	));
+
+	printf("note: hpgame_rage_optimized is a rage mechanics game with optimized parameters.\n"
+		"  1. more than +50% increase in GDS.\n"
+		"  2. if this game is fun, this is an empirical proof that GDS matches human engagement.\n"
+	);
+
+
+	// let's print precalculated A1-A5 values for external usage.
+	//const ANTICIPATION_TABLE = {
+	//    // Format: "hp1,hp2,rage1,rage2": [A1,A2,A3,A4,A5,SUM]
+	//    "5,5,0,0": 
+	//    "5,4,1,1": 
+	//    "4,4,2,2": 
+	//    "2,2,3,3": 
+	//    "1,1,5,5": 
+	//    // ... (all calculated states)
+	//};
+
+	// Print precalculated anticipation table for JavaScript usage
+	auto printAnticipationTableForJS = [&]()
+		{
+			std::cout << "// Precalculated Anticipation values for HpGame_Rage_optimized" << std::endl;
+			std::cout << "const ANTICIPATION_TABLE = {" << std::endl;
+			std::cout << "    // Format: \"hp1,hp2,rage1,rage2\": [A1,A2,A3,A4,A5,SUM]" << std::endl;
+
+			for (const auto& state : analysis.states)
+			{
+				auto& node = analysis.stateNodes[state];
+				auto& node2 = analysis2.stateNodes[state];
+				auto& node3 = analysis3.stateNodes[state];
+				auto& node4 = analysis4.stateNodes[state];
+				auto& node5 = analysis5.stateNodes[state];
+
+				// Format key
+				std::string key = std::to_string(state.hp1) + "," +
+					std::to_string(state.hp2) + "," +
+					std::to_string(state.rage1) + "," +
+					std::to_string(state.rage2);
+
+				// Format values
+				std::cout << "    \"" << key << "\": [" <<
+					node.a << "," <<
+					node2.a << "," <<
+					node3.a << "," <<
+					node4.a << "," <<
+					node5.a << "," <<
+					(node.a + node2.a + node3.a + node4.a + node5.a) << "]," << std::endl;
+			}
+
+			std::cout << "};" << std::endl;
+			std::cout << std::endl;
+
+			// Print usage example
+			std::cout << "// Usage in JavaScript:" << std::endl;
+			std::cout << "// const key = `${p1_hp},${p2_hp},${p1_rage},${p2_rage}`;" << std::endl;
+			std::cout << "// const [A1,A2,A3,A4,A5,SUM] = ANTICIPATION_TABLE[key] || [0,0,0,0,0,0];" << std::endl;
+		};
+	printAnticipationTableForJS();
+
+	return 0;
+}
 int optimal_two_turn_game_program()
 {
 
@@ -584,6 +676,8 @@ int main()
 		hpgame_rage,
 		hpgame_rage_optimize_critchance,
 		hpgame_rage_compare_mechanics,
+		hpgame_rage_optimized,
+
 		optimal_two_turn_game,
 
 	};
@@ -591,7 +685,7 @@ int main()
 	//return hpgame_rage_find_optimal_critchance();
 	//return experiment_hpgame_rage_find_optimal_crit_per_config();
 
-	switch (hpgame_rage_compare_mechanics) // change this to run different programs
+	switch (hpgame_rage_optimized) // change this to run different programs
 	{
 	case rock_paper_scissors: return rps_program();
 	case cointoss: return cointoss_program();
@@ -600,6 +694,7 @@ int main()
 	case hpgame_rage: return hpgame_rage_analyze_program();
 	case hpgame_rage_optimize_critchance: return hpgame_rage_find_optimal_critchance();
 	case hpgame_rage_compare_mechanics: return hpgame_rage_compare_mechanics_program();
+	case hpgame_rage_optimized: return hpgame_rage_optimized_program();
 	case optimal_two_turn_game: return optimal_two_turn_game_program();
 		//return experiment_hpgame_rage_find_optimal_crit_per_config();
 		//return lanegame_analyze_program();
