@@ -59,6 +59,7 @@ int hpgame_program()
 	printf("note: hpgame is a benchmark model for 1vs1 & action packed games.\n"
 		"  1. empirically correct result. most fun when both players low HP, least fun when HP gap large.\n"
 		"  2. high in A1 and low in A2~A5, confirming immediate tactical focus over strategic planning.\n"
+		"  3. playable on https://akalouis.github.io/anticipation-theory/Html/hpgame.html \n"
 	);
 	return 0;
 }
@@ -271,11 +272,13 @@ int hpgame_rage_optimized_program()
 		}, config
 	));
 
-	puts("note: hpgame_rage_optimized is a rage mechanics game with optimized parameters.\n"
-		"  1. more than +50% increase in GDS.\n"
-		"  2. if this game is fun, this is an empirical proof that GDS matches human engagement.\n"
+	puts("Note: `hpgame_rage_optimized` uses parameters algorithmically optimized for Game Design Score (GDS).\n"
+		"  1. Its GDS is over 50% higher than the `hpgame` baseline.\n"
+		"  2. The optimization was purely data-driven, no subjective parameter tuning was made.\n"
+		"  3. This is the top-performing `HpGame` variant analyzed so far (as of Jul 2025).\n"
+		"  4. If you find this game more engaging than `hpgame`, it serves as strong empirical evidence for our GDS metric and the Theory of Anticipation (ToA).\n"
+		"  5. Play the live demo here: https://akalouis.github.io/anticipation-theory/Html/hpgame_rage_optimized.html\n"
 	);
-
 
 	// let's print precalculated A1-A5 values for external usage.
 	//const ANTICIPATION_TABLE = {
@@ -323,7 +326,7 @@ int hpgame_rage_optimized_program()
 			std::cout << "// const key = `${p1_hp},${p2_hp},${p1_rage},${p2_rage}`;" << std::endl;
 			std::cout << "// const [A1,A2,A3,A4,A5,SUM] = ANTICIPATION_TABLE[key] || [0,0,0,0,0,0];" << std::endl;
 		};
-	printAnticipationTableForJS();
+	//printAnticipationTableForJS();
 
 	return 0;
 }
@@ -531,7 +534,7 @@ int main()
 	//return hpgame_rage_find_optimal_critchance();
 	//return experiment_hpgame_rage_find_optimal_crit_per_config();
 
-	switch (hpgame_rage_optimize_critchance) // change this to run different programs
+	switch (hpgame_rage_optimized) // change this to run different programs
 	{
 	case rock_paper_scissors: return rps_program();
 	case cointoss: return cointoss_program();
