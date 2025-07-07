@@ -44,7 +44,7 @@ int hpgame_program()
 	printf("Most engaging moments(sorted by sum(A))\n");
 	dump_most_fun_moments<Game>(analysis);
 
-	printf("Game design score): %f\n", analysis.game_design_score);
+	printf("Game design score: %f\n", analysis.game_design_score);
 	printf("Game design score(simulated): %f\n", game::compute_gamedesign_score_simulation<Game>(
 		[&](const State& s)
 		{
@@ -106,6 +106,12 @@ int hpgame_rage_analyze_program()
 			return analysis.stateNodes[s].sum_A();
 		}, config
 	));
+
+	puts("Note: HpGame Rage demonstrates novel rage/critical hit mechanics.\n"
+		"  1. Rage accumulates when dealing or receiving damage, enabling strategic depth.\n"
+		"  2. Critical hits deal additional damage scaled by accumulated rage.\n"
+		"  3. Shows higher A2-A5 components, indicating long-term strategic anticipation.\n"
+	);
 	return 0;
 }
 int hpgame_rage_find_optimal_critchance()
@@ -255,7 +261,6 @@ int hpgame_rage_optimized_program()
 	config.rage_dmg_multiplier = 2; // Rage damage multiplier
 	config.rage_increase_on_attack_dmg = true; // Increase rage when dealing damage
 	config.rage_increase_on_received_dmg = true; // Increase rage when receiving damage
-	printf("[hpgame_rage] Analyzing optimized rage game...\n");
 	auto initial_state = Game::initial_state();
 	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
 	printf("Most engaging moments(sorted by sum(A))\n");
@@ -331,184 +336,6 @@ int optimal_two_turn_game_program()
 
 	return 0;
 }
-int experiment_hpgame_rage_find_optimal_crit_per_config()
-{
-	using namespace hpgame_rage;
-	printf("[hpgame_rage] Testing ALL possible rage configurations...\n\n");
-
-	// Define parameter ranges
-	const float min_crit = 0.05f;         // 5%
-	const float max_crit = 0.40f;         // 40%
-	const float crit_step = 0.01f;        // 1% steps
-
-	// Generate all possible configurations systematically
-	std::vector<Config> all_configs;
-
-	// Boolean parameters: spendable, attack, defense
-	bool spendable_options[] = { false, true };
-	bool attack_options[] = { false, true };
-	bool defense_options[] = { false, true };
-
-	// Multiplier options: 1 through 5
-	int multiplier_options[] = { 1, 2, 3, 4, 5 };
-
-	// Generate all combinations
-	for (bool spendable : spendable_options) {
-		for (bool attack : attack_options) {
-			for (bool defense : defense_options) {
-				// Skip invalid configuration where no rage accumulation is possible
-				if (!attack && !defense) continue;
-
-				for (int multiplier : multiplier_options) {
-					Config config;
-					config.rage_spendable = spendable;
-					config.rage_dmg_multiplier = multiplier;
-					config.rage_increase_on_attack_dmg = attack;
-					config.rage_increase_on_received_dmg = defense;
-					all_configs.push_back(config);
-				}
-			}
-		}
-	}
-
-	printf("Testing %zu total configurations...\n", all_configs.size());
-
-	// Track overall best configuration
-	size_t best_config_index = 0;
-	float best_config_crit = 0.0f;
-	double best_config_score = 0.0;
-
-	// Store results
-	struct Result {
-		Config config;
-		float best_crit;
-		double best_score;
-
-		// Generate a name for this configuration
-		std::string get_name() const {
-			std::string name;
-
-			if (config.rage_dmg_multiplier > 1)
-				name += "Dmg x" + std::to_string(config.rage_dmg_multiplier) + " ";
-
-			if (config.rage_spendable)
-				name += "Spend ";
-
-			if (config.rage_increase_on_attack_dmg && config.rage_increase_on_received_dmg)
-				name += "Both";
-			else if (config.rage_increase_on_attack_dmg)
-				name += "Attack";
-			else if (config.rage_increase_on_received_dmg)
-				name += "Defense";
-
-			return name;
-		}
-	};
-	std::vector<Result> results;
-
-	// Progress tracking
-	int total_configs = (int)all_configs.size();
-	int completed = 0;
-	int last_percent = -1;
-	printf("Progress: ");
-
-	// Test each configuration
-	for (const auto& base_config : all_configs) {
-		// Find optimal crit for this configuration
-		float best_crit = min_crit;
-		double best_score = 0.0;
-
-		for (float crit = min_crit; crit <= max_crit; crit += crit_step)
-		{
-			Config config = base_config;
-			config.critical_chance = crit;
-
-			auto initial_state = Game::initial_state();
-			auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
-
-			double sum_score = analysis.game_design_score;
-			if (sum_score > best_score)
-			{
-				best_score = sum_score;
-				best_crit = crit;
-			}
-		}
-
-		// Store the result
-		Result result = { base_config, best_crit, best_score };
-		results.push_back(result);
-
-		// Update best overall if needed
-		if (best_score > best_config_score) {
-			best_config_score = best_score;
-			best_config_crit = best_crit;
-			best_config_index = results.size() - 1;
-		}
-
-		// Update progress
-		completed++;
-		int percent_done = (completed * 100) / total_configs;
-		if (percent_done > last_percent) {
-			printf("%d%%...", percent_done);
-			fflush(stdout);
-			last_percent = percent_done;
-		}
-	}
-
-	printf("done!\n\n");
-
-	// Sort results by score (descending)
-	std::sort(results.begin(), results.end(), [](const Result& a, const Result& b) {
-		return a.best_score > b.best_score;
-		});
-
-	// Print sorted results table
-	printf("Ranked Configurations:\n");
-	printf("Rank\tConfig\t\tCrit%%\tRageSpend\tDmgMult\tOnAttack\tOnReceive\tScore\n");
-	printf("----\t------------\t-----\t---------\t-------\t--------\t---------\t-----------\n");
-
-	for (size_t i = 0; i < results.size(); i++) {
-		const auto& result = results[i];
-		std::string name = result.get_name();
-
-		printf("%zu\t%-12s\t%.2f\t%s\t\t%d\t%s\t\t%s\t\t%.6f\n",
-			i + 1,
-			name.c_str(),
-			result.best_crit * 100,
-			result.config.rage_spendable ? "Yes" : "No",
-			result.config.rage_dmg_multiplier,
-			result.config.rage_increase_on_attack_dmg ? "Yes" : "No",
-			result.config.rage_increase_on_received_dmg ? "Yes" : "No",
-			result.best_score);
-
-		// Only show top 20 results to keep output manageable
-		if (i >= 19) {
-			printf("... plus %zu more configurations (showing top 20 only)\n", results.size() - 20);
-			break;
-		}
-	}
-
-	// Show the very best configuration
-	const auto& best_result = results[0];
-	printf("\nOverall Best Configuration:\n");
-	printf("Critical Hit%%: %.2f%%\n", best_result.best_crit * 100);
-	printf("Rage Spendable: %s\n", best_result.config.rage_spendable ? "Yes" : "No");
-	printf("Damage Multiplier: %d\n", best_result.config.rage_dmg_multiplier);
-	printf("Rage on Attack: %s\n", best_result.config.rage_increase_on_attack_dmg ? "Yes" : "No");
-	printf("Rage on Defense: %s\n", best_result.config.rage_increase_on_received_dmg ? "Yes" : "No");
-	printf("Score: %.6f\n", best_result.best_score);
-
-	// Set the best configuration for detailed analysis
-
-	auto best_config = best_result.config;
-	auto initial_state = Game::initial_state();
-	auto final_analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, best_config);
-
-	printf("\nMost engaging moments with best configuration:\n");
-	dump_most_fun_moments<Game>(final_analysis);
-
-	return 0;
-}
 
 int main()
 {
@@ -522,15 +349,10 @@ int main()
 		hpgame_rage_optimize_critchance,
 		hpgame_rage_compare_mechanics,
 		hpgame_rage_optimized,
-
 		optimal_two_turn_game,
-
 	};
 
-	//return hpgame_rage_find_optimal_critchance();
-	//return experiment_hpgame_rage_find_optimal_crit_per_config();
-
-	switch (hpgame_rage_optimized) // change this to run different programs
+	switch (hpgame_rage_optimized) // Change this to run different programs
 	{
 	case rock_paper_scissors: return rps_program();
 	case cointoss: return cointoss_program();
@@ -541,16 +363,5 @@ int main()
 	case hpgame_rage_compare_mechanics: return hpgame_rage_compare_mechanics_program();
 	case hpgame_rage_optimized: return hpgame_rage_optimized_program();
 	case optimal_two_turn_game: return optimal_two_turn_game_program();
-		//return experiment_hpgame_rage_find_optimal_crit_per_config();
-		//return lanegame_analyze_program();
-		//return lanegame_harvester_analyze_program();
 	}
-	//return lanegame_harvester_analyze_program();
-	//return lanegame_analyze_program();
-	//return hpgame_rage_find_optimal_critchance();
-	//return hpgame_rage_compare_mechanics();
-	//return experiment_hpgame_rage_find_optimal_crit_per_config();
-	//return hpgame_program();
-	//return hpgame_interactive_program();
-	//return hpgame_rage_analyze_program();
 }
