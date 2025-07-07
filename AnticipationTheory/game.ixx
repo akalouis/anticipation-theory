@@ -67,7 +67,7 @@ export namespace game
 		typename game_t::state_t start_state,
 		std::function<float(const typename game_t::state_t&)> compute_intrinsic_desire,
 		const typename game_t::config_t& config = typename game_t::config_t{},
-		unsigned long A_nest_level = 1
+		unsigned long A_nest_level = MAX_ANTICIPATION_NEST_LEVEL
 	)
 	{
 		using state_t = typename game_t::state_t;
@@ -390,7 +390,7 @@ export namespace game
 		// Header
 		printf("%-*s\tD_global", static_cast<int>(max_state_length), "State");
 		for (int i = 0; i < MAX_ANTICIPATION_NEST_LEVEL; i++) {
-			printf("\tA[%d]", i);
+			printf("\tA%d", i+1);
 		}
 		printf("\tsum(A)\n");
 
