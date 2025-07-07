@@ -26,11 +26,10 @@ export namespace hpgame
 
 		static State initial_state() { return State{ 5, 5 }; }
 		static bool is_terminal_state(const State& s) { return s.hp1 <= 0 || s.hp2 <= 0; }
-		static std::vector<Transition> get_transitions(game::EmptyConfig, const State& state)
+		static std::vector<Transition> get_transitions(config_t, const State& state)
 		{
 			std::vector<Transition> result;
-			if (state.hp1 == 0) return result;
-			if (state.hp2 == 0) return result;
+			if (is_terminal_state(state)) return result;
 
 			// win draw loss version
 			result.push_back({ 1.0f / 3.0f, State{ state.hp1, (unsigned char)(state.hp2 - 1) }, TransitionAlias::AttackAndMiss });
@@ -49,16 +48,15 @@ export namespace hpgame
 			return state.hp1 != 0 && state.hp2 == 0 ? 1.0f : 0.0f; // player1 alive && player2 dead, win condition
 		}
 		static std::string tostr(const State& s) { return "HP1:" + std::to_string(s.hp1) + " HP2:" + std::to_string(s.hp2); }
-	};
-
-	std::string tostr(TransitionAlias alias)
-	{
-		switch (alias)
+		static std::string tostr(TransitionAlias alias)
 		{
-		case TransitionAlias::AttackAndMiss: return "AttackAndMiss";
-		case TransitionAlias::BothAttack: return "BothAttack";
-		case TransitionAlias::MissAndAttack: return "AttackReceived";
+			switch (alias)
+			{
+			case TransitionAlias::AttackAndMiss: return "AttackAndMiss";
+			case TransitionAlias::BothAttack: return "BothAttack";
+			case TransitionAlias::MissAndAttack: return "AttackReceived";
+			}
+			return "Unknown";
 		}
-		return "Unknown";
-	}
+	};
 }

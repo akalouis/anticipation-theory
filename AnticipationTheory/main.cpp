@@ -78,7 +78,7 @@ int hpgame_interactive_program()
 
 			auto transitions = Game::get_transitions(Game::config_t(), s);
 			for (size_t i = 0; i < transitions.size(); i++)
-				printf("%lld: %s\n", i, hpgame::tostr(transitions[i].alias).c_str());
+				printf("%lld: %s\n", i, Game::tostr(transitions[i].alias).c_str());
 
 			size_t choice; std::cin >> choice; return choice;
 		},
