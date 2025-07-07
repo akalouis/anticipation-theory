@@ -154,18 +154,18 @@ export namespace game
 						{
 							// Note:
 							//
-							// 1. This calculation is conceptually a weighted standard deviation. However, you may notice
-							//    that the implementation differs from the Local Anticipation Formula described in our paper,
-							//    "FORMULATION OF ENGAGEMENT AS LOCAL ANTICIPATION."
+							// 1. This calculation is conceptually a weighted standard deviation. However, its implementation
+							//    differs from the "Local Anticipation Formula" described in our paper. The key difference
+							//    is the use of D_perspective, which was not part of that paper's formula.
 							//
-							// 2. We use `D_perspective` to represent "perspective desire." It measures the difference in
-							//    desire (D) between a subsequent state (s2) and an initial state (s1):
+							// 2. We define `D_perspective` ("perspective desire") as the difference in desire (D)
+							//    between a subsequent state (s2) and an initial state (s1):
 							//    D_perspective = D(s2) - D(s1)
 							//
-							// 3. Using the raw desire value (D) would yield a measurement from an external,
-							//    objective viewpoint. To accurately model the anticipation experienced from within a
-							//    specific state, we must instead calculate the change in desire from that state's
-							//    point of view. This subtraction is what "perspectivizes" the value.
+							// 3. Using the raw desire value (D) would yield a measurement from an external, objective
+							//    viewpoint. To accurately model the anticipation experienced from within a specific state,
+							//    we calculate this change from the state's point of view. This subtraction is what
+							//    "perspectivizes" the value.
 
 							float sum_pd = 0.0f;
 							for (const auto& ts : game_t::get_transitions(config, state))
