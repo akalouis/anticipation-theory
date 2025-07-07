@@ -7,7 +7,6 @@
     <ClCompile Include="game.ixx" />
     <ClCompile Include="hpgame_rage.ixx" />
     <ClCompile Include="lanegame.ixx" />
-    <ClCompile Include="lanegame_harvestor.ixx" />
     <ClCompile Include="rps_game.ixx" />
     <ClCompile Include="coin_toss_game.ixx" />
     <ClCompile Include="two_turn_game.ixx" />

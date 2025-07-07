@@ -1,12 +1,10 @@
 module;
 export module hpgame_v1;
-
 import "pch.h";
 import game;
 
 export namespace hpgame
 {
-	struct Transition;
 	enum class TransitionAlias : unsigned char
 	{
 		AttackAndMiss,
@@ -17,52 +15,41 @@ export namespace hpgame
 	{
 		unsigned char hp1; // player1 hp
 		unsigned char hp2; // player2 hp
-
 		auto operator <=> (const State&) const = default;
-
-		bool is_terminal() const;
-		std::vector<Transition> transitions() const;
-
-		static State initial() { return State{ 5, 5 }; }
 	};
-	struct Transition
+	struct Transition { float probability; State to; TransitionAlias alias; };
+
+	struct Game
 	{
-		float probability;
-		State to;
-		TransitionAlias alias;
+		typedef game::EmptyConfig config_t;
+		typedef State state_t;
+
+		static State initial_state() { return State{ 5, 5 }; }
+		static bool is_terminal_state(const State& s) { return s.hp1 <= 0 || s.hp2 <= 0; }
+		static std::vector<Transition> get_transitions(game::EmptyConfig, const State& state)
+		{
+			std::vector<Transition> result;
+			if (state.hp1 == 0) return result;
+			if (state.hp2 == 0) return result;
+
+			// win draw loss version
+			result.push_back({ 1.0f / 3.0f, State{ state.hp1, (unsigned char)(state.hp2 - 1) }, TransitionAlias::AttackAndMiss });
+			result.push_back({ 1.0f / 3.0f, State{ (unsigned char)(state.hp1 - 1), (unsigned char)(state.hp2 - 1) }, TransitionAlias::BothAttack });
+			result.push_back({ 1.0f / 3.0f, State{ (unsigned char)(state.hp1 - 1), state.hp2 }, TransitionAlias::MissAndAttack });
+
+			// win & loss version (commented)
+			//result.push_back({ 1.0f / 2.0f, State{ state.hp1, (unsigned char)(state.hp2 - 1) }, TransitionAlias::AttackAndMiss });
+			//result.push_back({ 1.0f / 2.0f, State{ (unsigned char)(state.hp1 - 1), state.hp2 }, TransitionAlias::MissAndAttack });
+
+			game::sanitize_transitions(result);
+			return result;
+		}
+		static float compute_intrinsic_desire(const State& state)
+		{
+			return state.hp1 != 0 && state.hp2 == 0 ? 1.0f : 0.0f; // player1 alive && player2 dead, win condition
+		}
+		static std::string tostr(const State& s) { return "HP1:" + std::to_string(s.hp1) + " HP2:" + std::to_string(s.hp2); }
 	};
-
-	State initial_state() { return State{ 5, 5 }; }
-
-	bool State::is_terminal() const { return hp1 <= 0 || hp2 <= 0; }
-	std::vector<Transition> State::transitions() const
-	{
-		std::vector<Transition> result;
-		if (hp1 == 0) return result;
-		if (hp2 == 0) return result;
-
-		// win draw loss version
-		result.push_back({ 1.0f / 3.0f, State{ hp1, (unsigned char)(hp2 - 1) }, TransitionAlias::AttackAndMiss });
-		result.push_back({ 1.0f / 3.0f, State{ (unsigned char)(hp1 - 1), (unsigned char)(hp2 - 1) }, TransitionAlias::BothAttack });
-		result.push_back({ 1.0f / 3.0f, State{ (unsigned char)(hp1 - 1), hp2 }, TransitionAlias::MissAndAttack });
-
-		// win & loss version
-		//result.push_back({ 1.0f / 2.0f, State{ hp1, (unsigned char)(hp2 - 1) }, TransitionAlias::AttackAndMiss });
-		//result.push_back({ 1.0f / 2.0f, State{ (unsigned char)(hp1 - 1), hp2 }, TransitionAlias::MissAndAttack });
-
-		// validate probabilities
-		float total = 0.0f;
-		for (const auto& ts : result)
-			total += ts.probability;
-		if (total != 1.0f)
-			throw std::runtime_error("Invalid probabilities");
-
-		// normalize probabilities
-		for (auto& ts : result)
-			ts.probability /= total;
-
-		return result;
-	}
 
 	std::string tostr(TransitionAlias alias)
 	{
@@ -73,24 +60,11 @@ export namespace hpgame
 		case TransitionAlias::MissAndAttack: return "AttackReceived";
 		}
 		return "Unknown";
-	};
+	}
 }
+
 export namespace game
 {
-	GameAnalysis<hpgame::State> analyze_hpgame() { return analyze<hpgame::State>([](const hpgame::State& state)
-		{
-			return
-				state.hp1 != 0 && state.hp2 == 0 // player1 alive && player2 dead, win condition
-				? 1.0f
-				: 0.0f;
-		});
-	}
-
-	hpgame::State run_hpgame(const std::function<size_t(const hpgame::State&)> onChoice)
-	{
-		return run<hpgame::State>(onChoice);
-	}
-
 	template<typename state_t> void hpgame_dump_most_fun_moments(const std::vector<state_t>& states, std::map<state_t, StateNode>& stateNodes)
 	{
 		std::vector<state_t> states_sorted_by_a = states;
@@ -144,7 +118,7 @@ export namespace game
 					state.hp1, state.hp2, node.d_local, node.d_global,
 					node.a, node2.a, node3.a, node4.a, node5.a,
 					node.a + node2.a + node3.a + node4.a + node5.a
-					
+
 				);
 		}
 	}

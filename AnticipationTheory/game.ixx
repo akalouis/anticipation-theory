@@ -5,6 +5,7 @@ import "pch.h";
 
 export namespace game
 {
+	struct EmptyConfig {};
 	struct StateNode
 	{
 		float d_local = 0.0f;	// intrinsic desire
@@ -20,26 +21,31 @@ export namespace game
 		std::map<size_t, StepNode> steps; // propagated anticipation for game design score, step -> current_total_anticipation
 	};
 
-	template<typename state_t> void traverseR(const state_t& s, std::function<void(const state_t& s)> onState)
+	template<typename game_t> void traverseR(const typename game_t::state_t& s, const typename game_t::config_t& config, std::function<void(const typename game_t::state_t& s)> onState)
 	{
+		using state_t = typename game_t::state_t;
+		using config_t = typename game_t::config_t;
+
 		std::set<state_t> visited;
 		std::function<void(const state_t&)> recurse;
 		recurse = [&](const state_t& s)
 			{
 				if (visited.find(s) != visited.end()) return;
 				visited.insert(s).second;
-				for (const auto& ts : s.transitions())
+				for (const auto& ts : game_t::get_transitions(config, s))
 					recurse(ts.to);
 				onState(s);
 			};
 		recurse(s);
 	};
-	template<typename state_t> std::vector<state_t> serializeR(state_t start_state)
+	template<typename game_t> std::vector<typename game_t::state_t> serializeR(const typename game_t::state_t& start_state, const typename game_t::config_t& config)
 	{
+		using state_t = typename game_t::state_t;
 		std::vector<state_t> states_serialized;
 
-		traverseR<state_t>(
+		traverseR<game_t>(
 			start_state,
+			config,
 			[&](const state_t& s)
 			{
 				states_serialized.push_back(s);
@@ -54,18 +60,22 @@ export namespace game
 		std::map<state_t, StateNode> stateNodes;
 		double game_design_score;
 	};
-	template<typename state_t> GameAnalysis<state_t> analyze(
-		std::function<float(const state_t&)> compute_intrinsic_desire
+
+	template<typename game_t> GameAnalysis<typename game_t::state_t> analyze(
+		typename game_t::state_t start_state,
+		std::function<float(const typename game_t::state_t&)> compute_intrinsic_desire,
+		const typename game_t::config_t& config = typename game_t::config_t{}
 	)
 	{
-		auto start_state = state_t::initial();
+		using state_t = typename game_t::state_t;
+		using config_t = typename game_t::config_t;
 
 		std::vector<state_t> states;
 		std::vector<state_t> states_R;
 		std::map<state_t, StateNode> stateNodes;
 		double game_design_score = 0.0;
 
-		states_R = serializeR(start_state);
+		states_R = serializeR<game_t>(start_state, config);
 		std::reverse_copy(states_R.begin(), states_R.end(), std::back_inserter(states));
 
 		auto buildNodes = [&]()
@@ -91,7 +101,7 @@ export namespace game
 					if (node.d_global) throw std::runtime_error("Global D already seeded");
 					node.d_global = node.d_local;
 
-					for (const auto& ts : state.transitions())
+					for (const auto& ts : game_t::get_transitions(config, state))
 					{
 						auto& tnode = stateNodes[ts.to];
 						node.d_global += tnode.d_global * ts.probability;
@@ -108,7 +118,7 @@ export namespace game
 
 					auto& node = stateNodes[state];
 
-					const auto transitions = state.transitions();
+					const auto transitions = game_t::get_transitions(config, state);
 					const size_t transition_count = transitions.size();
 					if (transition_count == 0)
 					{
@@ -123,7 +133,7 @@ export namespace game
 							//	  D_perspective = D(s2) - D(s1)
 
 							float sum_pd = 0.0f;
-							for (const auto& ts : transitions)
+							for (const auto& ts : game_t::get_transitions(config, state))
 							{
 								auto& tnode = stateNodes[ts.to];
 								float perspective_desire = tnode.d_global - node.d_global;
@@ -133,7 +143,7 @@ export namespace game
 							float avg_pd = sum_pd;
 
 							float weighted_variance = 0.0f;
-							for (const auto& ts : transitions)
+							for (const auto& ts : game_t::get_transitions(config, state))
 							{
 								float perspective_desire = stateNodes[ts.to].d_global - node.d_global;
 								float diff = perspective_desire - avg_pd; // diff = D - avg(PD)
@@ -156,7 +166,7 @@ export namespace game
 						for (const auto& state : states)
 						{
 							auto& node = stateNodes[state];
-							for (const auto& ts : state.transitions())
+							for (const auto& ts : game_t::get_transitions(config, state))
 							{
 								auto& tnode = stateNodes[ts.to];
 								for (auto& [si, step] : node.steps)
@@ -170,7 +180,7 @@ export namespace game
 						for (const auto& state : states)
 						{
 							auto& node = stateNodes[state];
-							for (const auto& ts : state.transitions())
+							for (const auto& ts : game_t::get_transitions(config, state))
 							{
 								auto& tnode = stateNodes[ts.to];
 								for (auto& [si, step] : node.steps)
@@ -188,7 +198,7 @@ export namespace game
 						for (const auto& state : states)
 						{
 							auto& node = stateNodes[state];
-							if (state.is_terminal())
+							if (game_t::is_terminal_state(state))
 							{
 								for (const auto& [si, step] : node.steps)
 								{
@@ -223,24 +233,37 @@ export namespace game
 		result.game_design_score = game_design_score;
 		return result;
 	}
-	template<typename state_t> state_t run(const std::function<size_t(const state_t&)> onChoice)
+	template<typename game_t> GameAnalysis<typename game_t::state_t> analyze(const typename game_t::config_t& config = typename game_t::config_t{})
 	{
-		state_t current_state = state_t::initial();
-		while (!current_state.is_terminal())
+		return analyze<game_t>(
+			game_t::initial_state(),
+			game_t::compute_intrinsic_desire,
+			config
+		);
+	}
+	template<typename game_t> typename game_t::state_t run(
+		typename game_t::state_t start_state,
+		const std::function<size_t(const typename game_t::state_t&)> onChoice,
+		const typename game_t::config_t& config)
+	{
+		using state_t = typename game_t::state_t;
+
+		state_t current_state = start_state;
+		while (!game_t::is_terminal_state(current_state))
 		{
 			size_t choice;
 			choice = onChoice(current_state);
-			current_state = current_state.transitions()[choice].to;
+			current_state = game_t::get_transitions(config, current_state)[choice].to;
 		}
 
 		return current_state;
 	}
 
-
-	template<typename state_t>
-	double compute_gamedesign_score_simulation(
-		const std::function<float(const state_t&)>& state_to_anticipation)
+	template<typename game_t>
+	double compute_gamedesign_score_simulation(const std::function<float(const typename game_t::state_t&)>& state_to_anticipation, const typename game_t::config_t& config)
 	{
+		using state_t = typename game_t::state_t;
+
 		size_t game_count = 10'000;
 		double total_anticipation = 0.0;
 
@@ -253,22 +276,22 @@ export namespace game
 			double avg_anticipation_for_thisgame = 0.0;
 			size_t total_turns = 0;
 
-			state_t current_state = state_t::initial();
-			current_state = run<state_t>(
+			state_t current_state = run<game_t>(
+				game_t::initial_state(),
 				[&](const state_t& s)
 				{
 					float anticipation = state_to_anticipation(s);
 					total_anticipation_for_thisgame += anticipation;
 					total_turns++;
 
-					auto transitions = s.transitions();
+					auto transitions = game_t::get_transitions(config, s);
 					std::vector<float> probabilities;
 					for (const auto& ts : transitions)
 						probabilities.push_back(ts.probability);
 
 					std::discrete_distribution<size_t> dist(probabilities.begin(), probabilities.end());
 					return dist(rng);
-				});
+				}, config);
 
 			// Add final state anticipation
 			total_anticipation_for_thisgame += state_to_anticipation(current_state);
@@ -282,11 +305,44 @@ export namespace game
 		return score;
 	}
 
-	// Convenience overload that uses StateNode map
-	template<typename state_t>
-	double compute_gamedesign_score_simulation(std::map<state_t, StateNode>& stateNodes)
+	template<typename game_t>
+	double compute_gamedesign_score_simulation(std::map<typename game_t::state_t, StateNode>& stateNodes, typename game_t::config_t config)
 	{
-		return compute_gamedesign_score_simulation<state_t>(
-			[&stateNodes](const state_t& s) { return stateNodes[s].a; });
+		using state_t = typename game_t::state_t;
+		return compute_gamedesign_score_simulation<game_t>([&stateNodes](const state_t& s) { return stateNodes[s].a; }, config);
+	}
+
+	// dump most fun moments
+	template<typename game_t>
+	void dump_most_fun_moments(GameAnalysis<typename game_t::state_t>& analysis)
+	{
+		std::vector<typename game_t::state_t> states_sorted_by_a = analysis.states;
+		std::sort(states_sorted_by_a.begin(), states_sorted_by_a.end(),
+			[&](const typename game_t::state_t& a, const typename game_t::state_t& b)
+			{
+				return analysis.stateNodes[a].a > analysis.stateNodes[b].a;
+			});
+		printf("Most fun moments (sorted by A)\n");
+		printf("State\tD_global\tA\n");
+		printf("-----\t-------\t--------\t-------\n");
+		for (const auto& state : states_sorted_by_a)
+		{
+			auto& node = analysis.stateNodes[state];
+			if (node.a > 0.0f)
+				printf("%s\t%.2f\t%.2f\n",
+					game_t::tostr(state).c_str(),
+					node.d_global, node.a);
+			// Limit output for readability
+			if (&state - &states_sorted_by_a[0] >= 25) break;
+		}
+	}
+
+	template<typename transition_t>
+	void sanitize_transitions(std::vector<transition_t>& transitions)
+	{
+		float total = 0.0f;
+		for (const auto& ts : transitions) total += ts.probability;
+		//if (std::abs(total - 1.0f) > 0.001f) throw std::runtime_error("Invalid probabilities in transitions");
+		for (auto& ts : transitions) ts.probability /= total;
 	}
 }
