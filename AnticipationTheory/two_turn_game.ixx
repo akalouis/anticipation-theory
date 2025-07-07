@@ -77,7 +77,7 @@ export namespace game
 				return (stateNodes[a].a + stateNodes2[a].a) > (stateNodes[b].a + stateNodes2[b].a);
 			});
 
-		printf("Most fun moments(sorted by A1+A2)\n");
+		printf("Most engaging moments(sorted by A1+A2)\n");
 		printf("State\t\t\tA1\tA2\tSUM\n");
 		for (const auto& state : states_sorted_by_a12)
 		{

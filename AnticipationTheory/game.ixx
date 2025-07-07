@@ -5,20 +5,22 @@ import "pch.h";
 
 export namespace game
 {
+	constexpr unsigned long MAX_ANTICIPATION_NEST_LEVEL = 8;
+
 	struct EmptyConfig {};
 	struct StateNode
 	{
-		float d_local = 0.0f;	// intrinsic desire
+		//float d_local = 0.0f;	// intrinsic desire
 		float d_global = 0.0f;	// propagated desire
-		float a = 0.0f;			// anticipation, measured engagement of given state
+		float a[MAX_ANTICIPATION_NEST_LEVEL] = { 0.0f }; // anticipation components, measured engagement of given state
 
-		struct StepNode
+		float sum_A() const
 		{
-			float a = 0.0f;
-			float reach_probability = 0.0f;
-		};
-
-		std::map<size_t, StepNode> steps; // propagated anticipation for game design score, step -> current_total_anticipation
+			float sum = 0.0f;
+			for (unsigned long i = 0; i < MAX_ANTICIPATION_NEST_LEVEL; ++i)
+				sum += a[i];
+			return sum;
+		}
 	};
 
 	template<typename game_t> void traverseR(const typename game_t::state_t& s, const typename game_t::config_t& config, std::function<void(const typename game_t::state_t& s)> onState)
@@ -64,16 +66,35 @@ export namespace game
 	template<typename game_t> GameAnalysis<typename game_t::state_t> analyze(
 		typename game_t::state_t start_state,
 		std::function<float(const typename game_t::state_t&)> compute_intrinsic_desire,
-		const typename game_t::config_t& config = typename game_t::config_t{}
+		const typename game_t::config_t& config = typename game_t::config_t{},
+		unsigned long A_nest_level = 1
 	)
 	{
 		using state_t = typename game_t::state_t;
 		using config_t = typename game_t::config_t;
 
+		if (MAX_ANTICIPATION_NEST_LEVEL < A_nest_level) throw std::runtime_error("A_component_idx exceeds MAX_ANTICIPATION_NEST_LEVEL");
+
+		struct PropagationNode
+		{
+			float d_local = 0.0f; // intrinsic desire
+			float d_global = 0.0f; // propagated desire
+			float a = 0.0f;
+
+			struct StepNode
+			{
+				float a = 0.0f;
+				float reach_probability = 0.0f;
+			};
+
+			std::map<size_t, StepNode> steps; // propagated anticipation for game design score, step -> current_total_anticipation
+
+		};
 		std::vector<state_t> states;
 		std::vector<state_t> states_R;
-		std::map<state_t, StateNode> stateNodes;
-		double game_design_score = 0.0;
+		std::map<state_t, PropagationNode> propNodes;
+		std::map<state_t, StateNode> resultNodes;
+		double game_design_scores[MAX_ANTICIPATION_NEST_LEVEL] = { 0.0 };
 
 		states_R = serializeR<game_t>(start_state, config);
 		std::reverse_copy(states_R.begin(), states_R.end(), std::back_inserter(states));
@@ -81,14 +102,21 @@ export namespace game
 		auto buildNodes = [&]()
 			{
 				for (const auto& state : states)
-					stateNodes[state] = StateNode{};
+					propNodes[state] = PropagationNode{};
 			};
-		auto seedD = [&]()
+		auto seedD = [&](unsigned long A_component_idx)
 			{
 				for (const auto& state : states)
 				{
-					auto& node = stateNodes[state];
-					node.d_local = compute_intrinsic_desire(state);
+					auto& node = propNodes[state];
+					if (A_component_idx == 0)
+					{
+						node.d_local = compute_intrinsic_desire(state);
+					}
+					else
+					{
+						node.d_local = resultNodes[state].a[A_component_idx - 1]; // previous A component as new desire
+					}
 					//if (state.hp1 != 0 && state.hp2 == 0)		// player1 alive && player2 dead	
 					//	node.d_local = 1.0f;					// player1 wins
 				}
@@ -97,13 +125,13 @@ export namespace game
 			{
 				for (const auto& state : states_R)
 				{
-					auto& node = stateNodes[state];
+					auto& node = propNodes[state];
 					if (node.d_global) throw std::runtime_error("Global D already seeded");
 					node.d_global = node.d_local;
 
 					for (const auto& ts : game_t::get_transitions(config, state))
 					{
-						auto& tnode = stateNodes[ts.to];
+						auto& tnode = propNodes[ts.to];
 						node.d_global += tnode.d_global * ts.probability;
 					}
 				}
@@ -112,11 +140,7 @@ export namespace game
 			{
 				for (const auto& state : states_R)
 				{
-#ifdef _DEBUG
-					//if (state == State(5, 1) || state == State(1, 1)) __debugbreak();
-#endif
-
-					auto& node = stateNodes[state];
+					auto& node = propNodes[state];
 
 					const auto transitions = game_t::get_transitions(config, state);
 					const size_t transition_count = transitions.size();
@@ -135,7 +159,7 @@ export namespace game
 							float sum_pd = 0.0f;
 							for (const auto& ts : game_t::get_transitions(config, state))
 							{
-								auto& tnode = stateNodes[ts.to];
+								auto& tnode = propNodes[ts.to];
 								float perspective_desire = tnode.d_global - node.d_global;
 								sum_pd += ts.probability * perspective_desire;  // sum_pe += P ¡¿ D
 							}
@@ -145,7 +169,7 @@ export namespace game
 							float weighted_variance = 0.0f;
 							for (const auto& ts : game_t::get_transitions(config, state))
 							{
-								float perspective_desire = stateNodes[ts.to].d_global - node.d_global;
+								float perspective_desire = propNodes[ts.to].d_global - node.d_global;
 								float diff = perspective_desire - avg_pd; // diff = D - avg(PD)
 								float diff_sq = diff * diff;
 
@@ -158,17 +182,17 @@ export namespace game
 					node.a = compute_A();
 				}
 			};
-		auto compute_gamedesign_score = [&]()
+		auto compute_gamedesign_score = [&](unsigned long A_component_idx)
 			{
 				auto propagate_reach_p = [&]()
 					{
-						stateNodes[start_state].steps[0].reach_probability = 1.0f;
+						propNodes[start_state].steps[0].reach_probability = 1.0f;
 						for (const auto& state : states)
 						{
-							auto& node = stateNodes[state];
+							auto& node = propNodes[state];
 							for (const auto& ts : game_t::get_transitions(config, state))
 							{
-								auto& tnode = stateNodes[ts.to];
+								auto& tnode = propNodes[ts.to];
 								for (auto& [si, step] : node.steps)
 									tnode.steps[si + 1].reach_probability += step.reach_probability * ts.probability;
 							}
@@ -176,13 +200,13 @@ export namespace game
 					};
 				auto propagate_A = [&]()
 					{
-						stateNodes[start_state].steps[0].a = stateNodes[start_state].a;
+						propNodes[start_state].steps[0].a = propNodes[start_state].a;
 						for (const auto& state : states)
 						{
-							auto& node = stateNodes[state];
+							auto& node = propNodes[state];
 							for (const auto& ts : game_t::get_transitions(config, state))
 							{
-								auto& tnode = stateNodes[ts.to];
+								auto& tnode = propNodes[ts.to];
 								for (auto& [si, step] : node.steps)
 								{
 									// Propagate current accumulated A and add target state's A once
@@ -197,13 +221,13 @@ export namespace game
 					{
 						for (const auto& state : states)
 						{
-							auto& node = stateNodes[state];
+							auto& node = propNodes[state];
 							if (game_t::is_terminal_state(state))
 							{
 								for (const auto& [si, step] : node.steps)
 								{
 									total_end_probability += step.reach_probability;
-									game_design_score += step.a / si;
+									game_design_scores[A_component_idx] += step.a / si;
 								}
 								//game_design_score += node.a_propagated * node.reach_probability 
 							}
@@ -219,28 +243,48 @@ export namespace game
 				propagate_A();
 				sum();
 			};
+		auto reflect_to_result = [&](unsigned long A_component_idx)
+			{
+				for (const auto& state : states)
+				{
+					auto& node = propNodes[state];
+					auto& resultNode = resultNodes[state];
+					resultNode.a[A_component_idx] = node.a;
+					if (A_component_idx == 0) resultNode.d_global = node.d_global;
+					//resultNode.d_local = node.d_local; // not needed
+				}
+			};
 
-		buildNodes();
-		seedD();
-		propagateD();
-		compute_A();
-		compute_gamedesign_score();
+		for (unsigned long component_idx = 0; component_idx < A_nest_level; component_idx++)
+		{
+			buildNodes();
+			seedD(component_idx);
+			propagateD();
+			compute_A();
+			compute_gamedesign_score(component_idx);
+			reflect_to_result(component_idx);
+		}
 
 		GameAnalysis<state_t> result{};
 		result.states = std::move(states);
 		result.states_R = std::move(states_R);
-		result.stateNodes = std::move(stateNodes);
-		result.game_design_score = game_design_score;
+		result.stateNodes = std::move(resultNodes);
+		//result.game_design_score = game_design_score;
+		for (unsigned long i = 0; i < A_nest_level; i++)
+			result.game_design_score += game_design_scores[i];
 		return result;
 	}
-	template<typename game_t> GameAnalysis<typename game_t::state_t> analyze(const typename game_t::config_t& config = typename game_t::config_t{})
+
+	template<typename game_t> inline GameAnalysis<typename game_t::state_t> analyze()
 	{
-		return analyze<game_t>(
-			game_t::initial_state(),
-			game_t::compute_intrinsic_desire,
-			config
-		);
+		using state_t = typename game_t::state_t;
+		using config_t = typename game_t::config_t;
+
+		auto config = game_t::config_t();
+
+		return analyze<game_t>(game_t::initial_state(), game_t::compute_intrinsic_desire, config);
 	}
+
 	template<typename game_t> typename game_t::state_t run(
 		typename game_t::state_t start_state,
 		const std::function<size_t(const typename game_t::state_t&)> onChoice,
@@ -312,7 +356,7 @@ export namespace game
 		return compute_gamedesign_score_simulation<game_t>([&stateNodes](const state_t& s) { return stateNodes[s].a; }, config);
 	}
 
-	// dump most fun moments
+	// dump most engaging moments
 	template<typename game_t>
 	void dump_most_fun_moments(GameAnalysis<typename game_t::state_t>& analysis)
 	{
@@ -320,18 +364,18 @@ export namespace game
 		std::sort(states_sorted_by_a.begin(), states_sorted_by_a.end(),
 			[&](const typename game_t::state_t& a, const typename game_t::state_t& b)
 			{
-				return analysis.stateNodes[a].a > analysis.stateNodes[b].a;
+				return analysis.stateNodes[a].sum_A() > analysis.stateNodes[b].sum_A();
 			});
-		printf("Most fun moments (sorted by A)\n");
-		printf("State\tD_global\tA\n");
-		printf("-----\t-------\t--------\t-------\n");
+		//printf("Most engaging moments (sorted by A)\n");
+		printf("State\tD_global\tsum(A)\n");
+		printf("------\t-------------\t---------\n");
 		for (const auto& state : states_sorted_by_a)
 		{
 			auto& node = analysis.stateNodes[state];
-			if (node.a > 0.0f)
+			if (node.sum_A() > 0.0f)
 				printf("%s\t%.2f\t%.2f\n",
 					game_t::tostr(state).c_str(),
-					node.d_global, node.a);
+					node.d_global, node.sum_A());
 			// Limit output for readability
 			if (&state - &states_sorted_by_a[0] >= 25) break;
 		}

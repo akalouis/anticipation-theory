@@ -10,8 +10,6 @@ using namespace game;
 
 int rps_program()
 {
-	printf("[rps_game] Analyzing game...\n\n");
-
 	auto analysis = analyze<rps_game::Game>();
 	dump_most_fun_moments<rps_game::Game>(analysis);
 	printf("Game design score: %f\n", analysis.game_design_score);
@@ -28,9 +26,8 @@ int rps_program()
 }
 int cointoss_program()
 {
-	printf("[coin_toss_game] Analyzing game...\n");
 	auto analysis = analyze<coin_toss_game::Game>();
-	game::coin_toss_dump_most_fun_moments(analysis.states, analysis.stateNodes);
+	dump_most_fun_moments<coin_toss_game::Game>(analysis);
 	printf("Game design score: %f\n", analysis.game_design_score);
 	printf("\n");
 	printf("\n");
@@ -44,40 +41,20 @@ int cointoss_program()
 int hpgame_program()
 {
 	using namespace hpgame;
-	printf("[hpgame] Analyzing game...\n");
 
 	auto config = Game::config_t();
 	auto initial_state = Game::initial_state();
-	auto analysis = game::analyze<Game>(config);
-	auto analysis2 = game::analyze<Game>(initial_state, [&](const State& s) {return analysis.stateNodes[s].a; }, config);
-	auto analysis3 = game::analyze<Game>(initial_state, [&](const State& s) {return analysis2.stateNodes[s].a; }, config);
-	auto analysis4 = game::analyze<Game>(initial_state, [&](const State& s) {return analysis3.stateNodes[s].a; }, config);
-	auto analysis5 = game::analyze<Game>(initial_state, [&](const State& s) {return analysis4.stateNodes[s].a; }, config);
+	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
 
-	//game::hpgame_dump_most_fun_moments(analysis.states, analysis.stateNodes);
-	//game::hpgame_dump_most_fun_moments(analysis2.states, analysis2.stateNodes);
-	//game::hpgame_dump_most_fun_moments(analysis3.states, analysis3.stateNodes);
-	//game::hpgame_dump_most_fun_moments(analysis4.states, analysis4.stateNodes);
-	//game::hpgame_dump_most_fun_moments(analysis5.states, analysis5.stateNodes);
-	game::hpgame_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes, analysis2.stateNodes, analysis3.stateNodes, analysis4.stateNodes, analysis5.stateNodes);
+	printf("Most engaging moments(sorted by sum(A))\n");
+	game::hpgame_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes);
 
-	printf("Game design score(A1): %f\n", analysis.game_design_score);
-	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score +
-		analysis2.game_design_score +
-		analysis3.game_design_score +
-		analysis4.game_design_score +
-		analysis5.game_design_score);
-	printf("Game design score(simulated): %f\n", game::compute_gamedesign_score_simulation<Game>(analysis.stateNodes, game::EmptyConfig()));
-	printf("Game design score(simulated, sum(A1~5)): %f\n", game::compute_gamedesign_score_simulation<Game>(
+	printf("Game design score): %f\n", analysis.game_design_score);
+	printf("Game design score(simulated): %f\n", game::compute_gamedesign_score_simulation<Game>(
 		[&](const State& s)
 		{
-			return analysis.stateNodes[s].a +
-				analysis2.stateNodes[s].a +
-				analysis3.stateNodes[s].a +
-				analysis4.stateNodes[s].a +
-				analysis5.stateNodes[s].a;
-		}, game::EmptyConfig()
-			));
+			return analysis.stateNodes[s].sum_A();
+		}, config));
 
 	printf("note: hpgame is a benchmark model for 1vs1 & action packed games.\n"
 		"  1. empirically correct result. most fun when both players low HP, least fun when HP gap large.\n"
@@ -90,13 +67,14 @@ int hpgame_interactive_program()
 	using namespace hpgame;
 
 	auto config = Game::config_t();
-	auto analysis = game::analyze<hpgame::Game>(config);
+	auto initial_state = Game::initial_state();
+	auto analysis = game::analyze<hpgame::Game>(initial_state, Game::compute_intrinsic_desire, config);
 	auto final_state = game::run<hpgame::Game>(
-		hpgame::Game::initial_state(),
+		initial_state,
 		[&](const hpgame::State& s)
 		{
 			printf("Player1.Hp:%d\tPlayer2.Hp:%d\t", s.hp1, s.hp2);
-			printf("Fun:%.2f\n", analysis.stateNodes[s].a);
+			printf("Fun:%.2f\n", analysis.stateNodes[s].sum_A());
 
 			auto transitions = Game::get_transitions(Game::config_t(), s);
 			for (size_t i = 0; i < transitions.size(); i++)
@@ -117,37 +95,17 @@ int hpgame_rage_analyze_program()
 {
 	using namespace hpgame_rage;
 
-	printf("[hpgame_rage] Analyzing game...\n");
-
 	auto config = Config();
 	auto initial_state = Game::initial_state();
-	auto analysis = game::analyze<Game>(config);
-	auto analysis2 = game::analyze<Game>(initial_state, [&](const State& s) {return analysis.stateNodes[s].a; }, config);
-	auto analysis3 = game::analyze<Game>(initial_state, [&](const State& s) {return analysis2.stateNodes[s].a; }, config);
-	auto analysis4 = game::analyze<Game>(initial_state, [&](const State& s) {return analysis3.stateNodes[s].a; }, config);
-	auto analysis5 = game::analyze<Game>(initial_state, [&](const State& s) {return analysis4.stateNodes[s].a; }, config);
-	//game::hpgame_rage_dump_most_fun_moments(analysis.states, analysis.stateNodes);
-	//game::hpgame_rage_dump_most_fun_moments(analysis2.states, analysis2.stateNodes);
-	//game::hpgame_rage_dump_most_fun_moments(analysis3.states, analysis3.stateNodes);
-	//game::hpgame_rage_dump_most_fun_moments(analysis4.states, analysis4.stateNodes);
-	//game::hpgame_rage_dump_most_fun_moments(analysis5.states, analysis5.stateNodes);
-	game::hpgame_rage_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes, analysis2.stateNodes, analysis3.stateNodes, analysis4.stateNodes, analysis5.stateNodes);
+	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
+	game::hpgame_rage_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes);
 
-	printf("Game design score(A1): %f\n", analysis.game_design_score);
-	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score +
-		analysis2.game_design_score +
-		analysis3.game_design_score +
-		analysis4.game_design_score +
-		analysis5.game_design_score);
-	printf("Game design score(simulated): %f\n", game::compute_gamedesign_score_simulation<Game>(analysis.stateNodes, config));
-	printf("Game design score(simulated, sum(A1~5)): %f\n", game::compute_gamedesign_score_simulation<Game>(
+	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score);
+	printf("Game design score(simulated, sum(A1~5)): %f\n",
+		game::compute_gamedesign_score_simulation<Game>(
 		[&](const hpgame_rage::State& s)
 		{
-			return analysis.stateNodes[s].a +
-				analysis2.stateNodes[s].a +
-				analysis3.stateNodes[s].a +
-				analysis4.stateNodes[s].a +
-				analysis5.stateNodes[s].a;
+			return analysis.stateNodes[s].sum_A();
 		}, config
 	));
 	return 0;
@@ -240,7 +198,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config8);
 
 	// Results table header
-	printf("Config\tCrit%%\tRageSpend\tDmgMult\tOnAttack\tOnReceive\tA1\t\tA1~5 Sum\tSimulated\n");
+	printf("Config\tCrit%%\tRageSpend\tDmgMult\tOnAttack\tOnReceive\t\tA1~5 Sum\tSimulated\n");
 	printf("------\t-----\t---------\t-------\t--------\t---------\t--------\t--------\t---------\n");
 
 	size_t config_index = 1;
@@ -250,35 +208,26 @@ int hpgame_rage_compare_mechanics_program()
 	// Test each configuration
 	for (const auto& config : configs)
 	{
-		auto analysis = game::analyze<Game>(config);
 		auto initial_state = Game::initial_state();
-		auto analysis2 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis.stateNodes[s].a; }, config);
-		auto analysis3 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis2.stateNodes[s].a; }, config);
-		auto analysis4 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis3.stateNodes[s].a; }, config);
-		auto analysis5 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis4.stateNodes[s].a; }, config);
-
-		// Calculate scores
-		double a1_score = analysis.game_design_score;
-		double sum_score = a1_score + analysis2.game_design_score + analysis3.game_design_score +
-			analysis4.game_design_score + analysis5.game_design_score;
+		auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
+		double sum_score = analysis.game_design_score;
 
 		// Calculate simulated score
 		double simulated_score = game::compute_gamedesign_score_simulation<Game>(
-			[&](const hpgame_rage::State& s) {
-				return analysis.stateNodes[s].a + analysis2.stateNodes[s].a + analysis3.stateNodes[s].a +
-					analysis4.stateNodes[s].a + analysis5.stateNodes[s].a;
+			[&](const hpgame_rage::State& s)
+			{
+				return analysis.stateNodes[s].sum_A();
 			}, config
 		);
 
 		// Print results
-		printf("%zu\t%.2f\t%s\t\t%d\t%s\t\t%s\t\t%.6f\t%.6f\t%.6f\n",
+		printf("%zu\t%.2f\t%s\t\t%d\t%s\t\t%s\t\t%.6f\t%.6f\n",
 			config_index,
 			config.critical_chance * 100,
 			config.rage_spendable ? "Yes" : "No",
 			config.rage_dmg_multiplier,
 			config.rage_increase_on_attack_dmg ? "Yes" : "No",
 			config.rage_increase_on_received_dmg ? "Yes" : "No",
-			a1_score,
 			sum_score,
 			simulated_score);
 
@@ -307,7 +256,7 @@ int hpgame_rage_compare_mechanics_program()
 	printf("Gain Rage on Attack: %s\n", configs[best_config - 1].rage_increase_on_attack_dmg ? "Yes" : "No");
 	printf("Gain Rage on Receiving Damage: %s\n", configs[best_config - 1].rage_increase_on_received_dmg ? "Yes" : "No");
 
-	//printf("\nMost fun moments with best configuration (Config %zu):\n", best_config);
+	//printf("\nMost engaging moments with best configuration (Config %zu):\n", best_config);
 	//game::hpgame_rage_dump_most_fun_moments(best_analysis.states, best_analysis.stateNodes);
 
 	return 0;
@@ -322,26 +271,14 @@ int hpgame_rage_optimized_program()
 	config.rage_increase_on_attack_dmg = true; // Increase rage when dealing damage
 	config.rage_increase_on_received_dmg = true; // Increase rage when receiving damage
 	printf("[hpgame_rage] Analyzing optimized rage game...\n");
-	auto analysis = game::analyze<Game>(config);
 	auto initial_state = Game::initial_state();
-	auto analysis2 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis.stateNodes[s].a; }, config);
-	auto analysis3 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis2.stateNodes[s].a; }, config);
-	auto analysis4 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis3.stateNodes[s].a; }, config);
-	auto analysis5 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis4.stateNodes[s].a; }, config);
-	game::hpgame_rage_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes, analysis2.stateNodes, analysis3.stateNodes, analysis4.stateNodes, analysis5.stateNodes);
-	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score +
-		analysis2.game_design_score +
-		analysis3.game_design_score +
-		analysis4.game_design_score +
-		analysis5.game_design_score);
+	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
+	game::hpgame_rage_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes);
+	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score);
 	printf("Game design score(simulated, sum(A1~5)): %f\n", game::compute_gamedesign_score_simulation<Game>(
 		[&](const hpgame_rage::State& s)
 		{
-			return analysis.stateNodes[s].a +
-				analysis2.stateNodes[s].a +
-				analysis3.stateNodes[s].a +
-				analysis4.stateNodes[s].a +
-				analysis5.stateNodes[s].a;
+			return analysis.stateNodes[s].sum_A();
 		}, config
 	));
 
@@ -372,10 +309,6 @@ int hpgame_rage_optimized_program()
 			for (const auto& state : analysis.states)
 			{
 				auto& node = analysis.stateNodes[state];
-				auto& node2 = analysis2.stateNodes[state];
-				auto& node3 = analysis3.stateNodes[state];
-				auto& node4 = analysis4.stateNodes[state];
-				auto& node5 = analysis5.stateNodes[state];
 
 				// Format key
 				std::string key = std::to_string(state.hp1) + "," +
@@ -385,12 +318,12 @@ int hpgame_rage_optimized_program()
 
 				// Format values
 				std::cout << "    \"" << key << "\": [" <<
-					node.a << "," <<
-					node2.a << "," <<
-					node3.a << "," <<
-					node4.a << "," <<
-					node5.a << "," <<
-					(node.a + node2.a + node3.a + node4.a + node5.a) << "]," << std::endl;
+					node.a[0] << "," <<
+					node.a[1] << "," <<
+					node.a[2] << "," <<
+					node.a[3] << "," <<
+					node.a[4] << "," <<
+					(node.sum_A()) << "]," << std::endl;
 			}
 
 			std::cout << "};" << std::endl;
@@ -502,19 +435,10 @@ int experiment_hpgame_rage_find_optimal_crit_per_config()
 			Config config = base_config;
 			config.critical_chance = crit;
 
-			auto analysis = game::analyze<Game>(config);
 			auto initial_state = Game::initial_state();
-			auto analysis2 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis.stateNodes[s].a; }, config);
-			auto analysis3 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis2.stateNodes[s].a; }, config);
-			auto analysis4 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis3.stateNodes[s].a; }, config);
-			auto analysis5 = game::analyze<Game>(initial_state, [&](const State& s) { return analysis4.stateNodes[s].a; }, config);
+			auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
 
-			double sum_score = analysis.game_design_score +
-				analysis2.game_design_score +
-				analysis3.game_design_score +
-				analysis4.game_design_score +
-				analysis5.game_design_score;
-
+			double sum_score = analysis.game_design_score;
 			if (sum_score > best_score)
 			{
 				best_score = sum_score;
@@ -589,57 +513,14 @@ int experiment_hpgame_rage_find_optimal_crit_per_config()
 	// Set the best configuration for detailed analysis
 
 	auto best_config = best_result.config;
-	auto final_analysis = game::analyze<Game>(best_config);
+	auto initial_state = Game::initial_state();
+	auto final_analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, best_config);
 
-	printf("\nMost fun moments with best configuration:\n");
+	printf("\nMost engaging moments with best configuration:\n");
 	game::hpgame_rage_dump_most_fun_moments(final_analysis.states, final_analysis.stateNodes);
 
 	return 0;
 }
-//int lanegame_analyze_program()
-//{
-//	printf("[lanegame] Analyzing game...\n");
-//	auto analysis = game::analyze_lanegame();
-//	auto analysis2 = game::analyze<lanegame::State, game::EmptyConfig>([&](const lanegame::State& s) { return analysis.stateNodes[s].a; });
-//	auto analysis3 = game::analyze<lanegame::State, game::EmptyConfig>([&](const lanegame::State& s) { return analysis2.stateNodes[s].a; });
-//	auto analysis4 = game::analyze<lanegame::State, game::EmptyConfig>([&](const lanegame::State& s) { return analysis3.stateNodes[s].a; });
-//	auto analysis5 = game::analyze<lanegame::State, game::EmptyConfig>([&](const lanegame::State& s) { return analysis4.stateNodes[s].a; });
-//	game::lanegame_dump_most_fun_moments(analysis.states, analysis.stateNodes);
-//	game::lanegame_dump_most_fun_moments(analysis2.states, analysis2.stateNodes);
-//	game::lanegame_dump_most_fun_moments(analysis3.states, analysis3.stateNodes);
-//	game::lanegame_dump_most_fun_moments(analysis4.states, analysis4.stateNodes);
-//	game::lanegame_dump_most_fun_moments(analysis5.states, analysis5.stateNodes);
-//	game::lanegame_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes, analysis2.stateNodes, analysis3.stateNodes, analysis4.stateNodes, analysis5.stateNodes);
-//	printf("Game design score: %f\n", analysis.game_design_score);
-//	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score +
-//		analysis2.game_design_score +
-//		analysis3.game_design_score +
-//		analysis4.game_design_score +
-//		analysis5.game_design_score);
-//
-//	printf("note: lanegame serves as a benchmark model for MOBA-style strategic games.\n"
-//		"  1. most engaging when early disadvantage states with recovery potential,\n"
-//		"     while terminal or heavily imbalanced states generate minimal player interest.\n"
-//		"  2. reflecting MOBA's emphasis on strategic depth through high A2-A5 values with moderate A1,\n"
-//		"     contrasting immediate mechanical responsiveness found in action-oriented games.\n"
-//		"  3. first quantitative measurement of strategic narrative engagement versus action-packed\n"
-//		"     engagement in competitive games, demonstrating ToA's objective analysis capabilities.\n"
-//		"  4. resolves the 'game-ending button problem' where maximizing immediate uncertainty\n"
-//		"     through high-stakes mechanics creates high A1 but poor overall experience.\n"
-//		"     Higher order anticipation components A2-A5 capture strategic depth and narrative flow,\n"
-//		"     further validating ToA's comprehensive engagement measurement framework.\n"
-//		"  5. deeper games require systematic design methodology beyond intuitive approaches.\n"
-//		"     A1 remains intuitive for designers, while higher order anticipation A2-A5 becomes\n"
-//		"     increasingly complex, requiring nested dynamic programming computations that exceed\n"
-//		"     conventional design intuition and necessitate mathematical analysis tools.\n"
-//		"  6. opening new possibilities for advancing strategic game design innovation.\n"
-//		"     A1 mechanics represent thoroughly explored design space, while A2-A5 and higher-order\n"
-//		"     engagement patterns remain largely unexplored due to computational complexity.\n"
-//		"     ToA provides essential mathematical framework for systematic exploration of engagement\n"
-//		"     possibilities that could surpass current industry benchmarks such as League of Legends.\n"
-//	);
-//	return 0;
-//}
 
 int main()
 {

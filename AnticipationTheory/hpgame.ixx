@@ -74,7 +74,7 @@ export namespace game
 				return stateNodes[a].a > stateNodes[b].a;
 			});
 
-		printf("Most fun moments(sorted by A)\n");
+		printf("Most engaging moments(sorted by A)\n");
 		printf("Player1.Hp\tPlayer2.Hp\tD_local\tD_global\tA\n");
 		for (const auto& state : states_sorted_by_a)
 		{
@@ -85,39 +85,24 @@ export namespace game
 		}
 	}
 
-	template<typename state_t> void hpgame_dump_most_fun_moments_a12345(
-		const std::vector<state_t>& states,
-		std::map<state_t, StateNode>& stateNodes,
-		std::map<state_t, StateNode>& stateNodes2,
-		std::map<state_t, StateNode>& stateNodes3,
-		std::map<state_t, StateNode>& stateNodes4,
-		std::map<state_t, StateNode>& stateNodes5)
+	template<typename state_t> void hpgame_dump_most_fun_moments_a12345(const std::vector<state_t>& states, std::map<state_t, StateNode>& stateNodes)
 	{
 		std::vector<state_t> states_sorted_by_a12345 = states;
 		std::sort(states_sorted_by_a12345.begin(), states_sorted_by_a12345.end(),
 			[&](const state_t& a, const state_t& b)
 			{
-				//return stateNodes[a].a > stateNodes[b].a;
-
-				//return (stateNodes[a].a + stateNodes2[a].a + stateNodes3[a].a) > (stateNodes[b].a + stateNodes2[b].a + stateNodes3[b].a);
-				return (stateNodes[a].a + stateNodes2[a].a + stateNodes3[a].a + stateNodes4[a].a + stateNodes5[a].a)
-				 > (stateNodes[b].a + stateNodes2[b].a + stateNodes3[b].a + stateNodes4[b].a + stateNodes5[b].a);
+				return stateNodes[a].sum_A() > stateNodes[b].sum_A();
 
 			});
-		printf("Most fun moments(sorted by A1+A2+A3+A4+A5)\n");
-		printf("Player1.Hp\tPlayer2.Hp\tD_local\tD_global\tA1\tA2\tA3\tA4\tA5\tSUM\n");
+		printf("Player1.Hp\tPlayer2.Hp\tD_global\tA1\tA2\tA3\tA4\tA5\tSUM\n");
 		for (const auto& state : states_sorted_by_a12345)
 		{
 			auto& node = stateNodes[state];
-			auto& node2 = stateNodes2[state];
-			auto& node3 = stateNodes3[state];
-			auto& node4 = stateNodes4[state];
-			auto& node5 = stateNodes5[state];
-			if (node.a > 0.0f)
-				printf("%d\t\t%d\t\t%.2f\t%.2f\t\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
-					state.hp1, state.hp2, node.d_local, node.d_global,
-					node.a, node2.a, node3.a, node4.a, node5.a,
-					node.a + node2.a + node3.a + node4.a + node5.a
+			if (node.sum_A() > 0.0f)
+				printf("%d\t\t%d\t\t%.2f\t\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+					state.hp1, state.hp2, node.d_global,
+					node.a[0], node.a[1], node.a[2], node.a[3], node.a[4],
+					node.sum_A()
 
 				);
 		}

@@ -77,7 +77,7 @@ export namespace game
 				return stateNodes[a].a > stateNodes[b].a;
 			});
 
-		printf("Most fun moments(sorted by A)\n");
+		printf("Most engaging moments(sorted by A)\n");
 		printf("P1.Exp\tP2.Exp\tMinions\tD_local\tD_global\tA\n");
 		printf("------\t------\t-------\t-------\t--------\t-------\n");
 
@@ -112,7 +112,7 @@ export namespace game
 					(stateNodes[b].a + stateNodes2[b].a + stateNodes3[b].a + stateNodes4[b].a + stateNodes5[b].a);
 			});
 
-		printf("Most fun moments(sorted by A1+A2+A3+A4+A5)\n");
+		printf("Most engaging moments(sorted by A1+A2+A3+A4+A5)\n");
 		printf("P1.Exp\tP2.Exp\tMinions\tD_loc\tD_glob\tA1\tA2\tA3\tA4\tA5\tA_total\n");
 		printf("------\t------\t-------\t-----\t------\t---\t---\t---\t---\t---\t-------\n");
 

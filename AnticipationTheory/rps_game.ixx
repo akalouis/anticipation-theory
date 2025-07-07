@@ -45,6 +45,7 @@ export namespace rps_game
 		{
 			switch (s.value)
 			{
+			case Code::Initial: return "Initial";
 			case Code::Win: return "Win";
 			case Code::Draw: return "Draw";
 			case Code::Loss: return "Loss";

@@ -45,35 +45,11 @@ export namespace coin_toss_game
         {
             switch (s.value)
             {
+            case StateCode::Initial: return "Initial";
             case StateCode::Win: return "Win";
             case StateCode::Loss: return "Loss";
-            case StateCode::Initial: return "Initial";
             }
             return "Unknown";
         }
     };
-}
-
-export namespace game
-{
-	template<typename state_t> void coin_toss_dump_most_fun_moments(const std::vector<state_t>& states, std::map<state_t, StateNode>& stateNodes)
-	{
-		std::vector<state_t> states_sorted_by_a = states;
-		std::sort(states_sorted_by_a.begin(), states_sorted_by_a.end(),
-			[&](const state_t& a, const state_t& b)
-			{
-				return stateNodes[a].a > stateNodes[b].a;
-			});
-
-		printf("Most fun moments(sorted by A)\n");
-		printf("State\t\tD_local\tD_global\tA\n");
-		for (const auto& state : states_sorted_by_a)
-		{
-			auto& node = stateNodes[state];
-			std::string state_name = coin_toss_game::Game::tostr(state);
-
-			if (node.a > 0.0f)
-				printf("%s\t\t%.2f\t%.2f\t\t%.2f\n", state_name.c_str(), node.d_local, node.d_global, node.a);
-		}
-	}
 }
