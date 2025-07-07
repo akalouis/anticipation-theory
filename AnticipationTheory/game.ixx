@@ -366,17 +366,48 @@ export namespace game
 			{
 				return analysis.stateNodes[a].sum_A() > analysis.stateNodes[b].sum_A();
 			});
-		//printf("Most engaging moments (sorted by A)\n");
-		printf("State\tD_global\tsum(A)\n");
-		printf("------\t-------------\t---------\n");
+
+		// Calculate max state string length
+		size_t max_state_length = 5;
+		for (const auto& state : states_sorted_by_a) {
+			size_t len = game_t::tostr(state).length();
+			if (len > max_state_length) {
+				max_state_length = len;
+			}
+		}
+
+		// Header
+		printf("%-*s\tD_global", static_cast<int>(max_state_length), "State");
+		for (int i = 0; i < MAX_ANTICIPATION_NEST_LEVEL; i++) {
+			printf("\tA[%d]", i);
+		}
+		printf("\tsum(A)\n");
+
+		// Separator
+		for (size_t i = 0; i < max_state_length; i++) printf("-");
+		printf("\t--------");
+		for (int i = 0; i < MAX_ANTICIPATION_NEST_LEVEL; i++) {
+			printf("\t----");
+		}
+		printf("\t------\n");
+
+		// Data
 		for (const auto& state : states_sorted_by_a)
 		{
 			auto& node = analysis.stateNodes[state];
-			if (node.sum_A() > 0.0f)
-				printf("%s\t%.2f\t%.2f\n",
+			if (node.sum_A() > 0.0f) {
+				printf("%-*s\t%.2f\t",
+					static_cast<int>(max_state_length),
 					game_t::tostr(state).c_str(),
-					node.d_global, node.sum_A());
-			// Limit output for readability
+					node.d_global);
+
+				for (int i = 0; i < MAX_ANTICIPATION_NEST_LEVEL; i++) {
+					printf("\t%.2f", node.a[i]);
+				}
+
+				printf("\t%.2f\n", node.sum_A());
+			}
+
 			if (&state - &states_sorted_by_a[0] >= 25) break;
 		}
 	}

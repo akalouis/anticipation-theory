@@ -217,52 +217,6 @@ export namespace hpgame_rage
 
 export namespace game
 {
-	template<typename state_t> void hpgame_rage_dump_most_fun_moments(const std::vector<state_t>& states, std::map<state_t, StateNode>& stateNodes)
-	{
-		std::vector<state_t> states_sorted_by_a = states;
-		std::sort(states_sorted_by_a.begin(), states_sorted_by_a.end(),
-			[&](const state_t& a, const state_t& b)
-			{
-				return stateNodes[a].sum_A() > stateNodes[b].sum_A();
-			});
-
-		printf("Most engaging moments(sorted by A)\n");
-		printf("Player1.Hp\tPlayer2.Hp\tRage1\tRage2\tD_local\tD_global\tA\n");
-		for (const auto& state : states_sorted_by_a)
-		{
-			auto& node = stateNodes[state];
-
-			if (node.sum_A() > 0.0f)
-				printf("%d\t\t%d\t\t%d\t%d\t%.2f\t%.2f\t\t%.2f\n",
-					state.hp1, state.hp2, state.rage1, state.rage2,
-					0, node.d_global, node.a);
-		}
-	}
-
-	template<typename state_t> void hpgame_rage_dump_most_fun_moments_a12345(const std::vector<state_t>& states, std::map<state_t, StateNode>& stateNodes)
-	{
-		std::vector<state_t> states_sorted_by_a12345 = states;
-		std::sort(states_sorted_by_a12345.begin(), states_sorted_by_a12345.end(),
-			[&](const state_t& a, const state_t& b)
-			{
-				return stateNodes[a].sum_A() > stateNodes[b].sum_A();
-			});
-
-		printf("Most engaging moments(sorted by A1+A2+A3+A4+A5)\n");
-		printf("Player1.Hp\tPlayer2.Hp\tRage1\tRage2\tD_global\tA1\tA2\tA3\tA4\tA5\tSUM\n");
-		for (const auto& state : states_sorted_by_a12345)
-		{
-			auto& node = stateNodes[state];
-			if (node.sum_A() > 0.0f)
-				printf("%d\t\t%d\t\t%d\t%d\t%.2f\t\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
-					state.hp1, state.hp2, state.rage1, state.rage2,
-					node.d_global,
-					node.a[0], node.a[1], node.a[2], node.a[3], node.a[4],
-					node.sum_A()
-				);
-		}
-	}
-
 	// Function to find optimal critical hit chance
 	void hpgame_rage_find_optimal_critical_chance(float min_critical = 0.0f, float max_critical = 0.40f, float step = 0.05f)
 	{

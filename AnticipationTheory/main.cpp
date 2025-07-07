@@ -47,7 +47,7 @@ int hpgame_program()
 	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
 
 	printf("Most engaging moments(sorted by sum(A))\n");
-	game::hpgame_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes);
+	dump_most_fun_moments<Game>(analysis);
 
 	printf("Game design score): %f\n", analysis.game_design_score);
 	printf("Game design score(simulated): %f\n", game::compute_gamedesign_score_simulation<Game>(
@@ -98,7 +98,8 @@ int hpgame_rage_analyze_program()
 	auto config = Config();
 	auto initial_state = Game::initial_state();
 	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
-	game::hpgame_rage_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes);
+	printf("Most engaging moments(sorted by sum(A))\n");
+	dump_most_fun_moments<Game>(analysis);
 
 	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score);
 	printf("Game design score(simulated, sum(A1~5)): %f\n",
@@ -113,7 +114,6 @@ int hpgame_rage_analyze_program()
 int hpgame_rage_find_optimal_critchance()
 {
 	std::cout << "Analyzing optimal critical hit chance for rage mechanics..." << std::endl;
-
 	game::hpgame_rage_find_optimal_critical_chance(0.0f, 0.40f, 0.01f);
 	return 0;
 }
@@ -241,23 +241,11 @@ int hpgame_rage_compare_mechanics_program()
 	}
 
 	printf("\nBest configuration: %zu with sum score: %.6f\n", best_config, best_score);
-
-	// Show detailed analysis of best configuration
-	//hpgame_rage::State::Config config = configs[best_config - 1];
-	//auto best_analysis = game::analyze_hpgame_rage(config);
-	//// game design score
-	//printf("Best configuration game design score: %.6f\n", best_analysis.game_design_score);
-
-
-	printf("\nBest configuration %zu:\n", best_config);
 	printf("Critical Hit: %.2f%%\n", configs[best_config - 1].critical_chance * 100);
 	printf("Spend Rage on Critical: %s\n", configs[best_config - 1].rage_spendable ? "Yes" : "No");
 	printf("Rage Damage Multiplier: %d\n", configs[best_config - 1].rage_dmg_multiplier);
 	printf("Gain Rage on Attack: %s\n", configs[best_config - 1].rage_increase_on_attack_dmg ? "Yes" : "No");
 	printf("Gain Rage on Receiving Damage: %s\n", configs[best_config - 1].rage_increase_on_received_dmg ? "Yes" : "No");
-
-	//printf("\nMost engaging moments with best configuration (Config %zu):\n", best_config);
-	//game::hpgame_rage_dump_most_fun_moments(best_analysis.states, best_analysis.stateNodes);
 
 	return 0;
 }
@@ -273,7 +261,8 @@ int hpgame_rage_optimized_program()
 	printf("[hpgame_rage] Analyzing optimized rage game...\n");
 	auto initial_state = Game::initial_state();
 	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
-	game::hpgame_rage_dump_most_fun_moments_a12345(analysis.states, analysis.stateNodes);
+	printf("Most engaging moments(sorted by sum(A))\n");
+	dump_most_fun_moments<Game>(analysis);
 	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score);
 	printf("Game design score(simulated, sum(A1~5)): %f\n", game::compute_gamedesign_score_simulation<Game>(
 		[&](const hpgame_rage::State& s)
@@ -517,7 +506,7 @@ int experiment_hpgame_rage_find_optimal_crit_per_config()
 	auto final_analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, best_config);
 
 	printf("\nMost engaging moments with best configuration:\n");
-	game::hpgame_rage_dump_most_fun_moments(final_analysis.states, final_analysis.stateNodes);
+	dump_most_fun_moments<Game>(final_analysis);
 
 	return 0;
 }
@@ -542,7 +531,7 @@ int main()
 	//return hpgame_rage_find_optimal_critchance();
 	//return experiment_hpgame_rage_find_optimal_crit_per_config();
 
-	switch (hpgame_rage_optimized) // change this to run different programs
+	switch (hpgame_rage_optimize_critchance) // change this to run different programs
 	{
 	case rock_paper_scissors: return rps_program();
 	case cointoss: return cointoss_program();
