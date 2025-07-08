@@ -1,70 +1,119 @@
-# anticipation-theory
+# Theory of Anticipation (ToA)
 
-**Compute "Objective Fun" of Game Design via the Theory of Anticipation.**
+[](https://opensource.org/licenses/MIT)
+[](https://doi.org/10.5281/zenodo.15826917)
+[](https://medium.com/@aka.louis/can-you-mathematically-measure-fun-you-could-not-until-now-01168128d428)
 
-A C++17 library for quantifying player engagement by measuring “anticipation,” a mathematically measured metric for in-game fun.
+**Theory of Anticipation (ToA)** is a new mathematical framework for quantifying engagement, or "fun." Created primarily as a game design tool, it offers an objective and computable measure of a player's engagement.
 
----
+This repository contains the official C++17 implementation of the theory. For a more intuitive, non-technical explanation, please refer to the [Medium article](https://medium.com/@aka.louis/can-you-mathematically-measure-fun-you-could-not-until-now-01168128d428). The formal academic details are available in the [foundational paper](https://doi.org/10.5281/zenodo.15826917).
+
+-----
 
 ## Overview
 
-Theory of Anticipation (ToA) is a new theory for objectively evaluating game design & all general narrative media(engaging level of youtube video, novel, movie, ...).
-
-Provides a **non‑subjective**, **optimizable**, and **analytically tractable** metric for player engagement (“fun”). Given any discrete game with probabilistic state transitions and defined player objectives, ToA computes how much fun each state generates.
+The Theory of Anticipation provides a formal language to describe and optimize for "fun." It aims to move aspects of game design from pure intuition to a domain that can be analytically explored and computationally optimized. By modeling a game as a system of states and probabilities, it calculates the engagement a player feels moment-to-moment.
 
 ### Inputs
 
-1. **Game Model**
+1.  **Game Model**: The game is represented as a probabilistic graph:
 
-   * **States**: Game states.
-   * **Transitions**: Transition probabilities $P(s \to s')$ between states.
+      * **States ($s$)**: All possible, discrete game situations.
+      * **Transitions ($P(s \\to s')$**: The probability of moving from one state to another.
 
-2. **Intrinsic Desire** (`D_local`)
-
-   Win condition. More precisely, the root source of fun. All outputs are computed from these values. 
-   Use win=1, others=0 for **objective** analysis (recommended). Custom values enable research and experimentation.
+2.  **Intrinsic Desire ($D\_{local}$)**: The root "seed" desire from which all derived anticipation values are generated. To enable objective analysis, you simply define the ultimate goal (e.g., set the "win condition" state to `1` and all other states to `0`). All other desire and anticipation values for the entire game are then computed automatically from this input.
 
 ### Outputs
 
-* **Global Desire** D_global for each state
-* **Anticipation** A1 for each state
-* **Nested Anticipation Values** A2,A3,A4,... for each state
-* **Game Design Score**: scalar average of `A1+A2+A3+A4+...` across all reachable states, weighted by reachability.
+  * **Global Desire ($D\_{global}$)**: The computed desirability of a given state.
+  * **Anticipation ($A\_1$)**: The immediate, quantifiable "fun" of any given state.
+  * **Nested Anticipation ($A\_2, A\_3, ...$)**: Higher-order components of anticipation for any given state, capturing deeper strategic fun.
+  * **Game Design Score**: A single, objective score for the entire game design.
 
 ### Core Foundation
 
-$$\mu = \sum_{s'} P(s \to s') \cdot D(s')$$
+At its heart, the theory measures the uncertainty of meaningfulness of future branches. The Local Anticipation ($A\_1$) for a given state ($s$) is calculated as:
+
 $$A_1(s) = \sqrt{\sum_{s'} P(s \to s') \cdot (D(s') - \mu)^2}$$
 
-This is the Local Anticipation formula, the core foundation of anticipation theory. Global and nested values are just algorithmic expansion of this (dynamic programming and recursion).
+This formula is the core of the theory, from which all other metrics are derived through algorithmic expansion. Detailed implementation specifics, such as the concept of "Perspective Desire" or efficient dynamic programming practices, are fully documented within the source code.
 
-Please refer to the white paper for details and derivation(located in /LaTeX folder).
+-----
 
----
+## Empirical Proof: Playable Demos 🎮
 
-## Features
+Below are two browser-playable versions of a simple game. The second version has been optimized by a computer algorithm, guided only by ToA's formulas, to maximize its "Game Design Score."
 
-* **Compute D_global(Global Desire)** for each state.
-* **Compute Anticipation via Dynamic Programming** for each state.
-* **Decompose Nested Anticipation** of anticipation (A2, A3, …).
-* **Game Design Score**: non-subjective, reproducible metric for entire game.
-* **Enumerate Top Fun Moments**: list states sorted by anticipation.
-* **Interactive Console Simulation**: step through state transitions and simulate the game in realtime.
-* **Optimizer Extension (TBD)**: integrate genetic algorithms to maximize design score.
+  * **Play the Baseline Game: [HpGame](https://akalouis.github.io/anticipation-theory/Html/hpgame.html)**
+  * **Play the Optimized Game: [HpGame\_Rage\_Optimized](https://akalouis.github.io/anticipation-theory/Html/hpgame_rage_optimized.html)**
 
----
+You will likely find the second game more engaging. This is a powerful and intuitive empirical proof that the Theory of Anticipation works.
 
-## Quickstart
+-----
+
+## Included Experiments
+
+The following experiments are implemented as demonstrations and test cases for the theory.
+
+  * `rock_paper_scissors`
+  * `cointoss`
+  * `hpgame` (The baseline playable demo)
+  * `hpgame_interactive`
+  * `hpgame_rage`
+  * `hpgame_rage_optimize_critchance`
+  * `hpgame_rage_compare_mechanics`
+  * `hpgame_rage_optimized` (The optimized playable demo)
+
+**Note**: Please refer to the source code for the most current and complete list of experiments.
+
+-----
+
+## Examples
+
+The framework allows you to define a complete game model with minimal code. The engine will then compute the anticipation and evaluate your design. Below is the full example required to implement and analyze a new experiment.
 
 ```cpp
+module;
+export module hpgame_v1;
+import "pch.h";
+import game;
+
+export namespace hpgame
+{
+	struct State
+	{
+		unsigned char hp1; // player1 hp
+		unsigned char hp2; // player2 hp
+		auto operator <=> (const State&) const = default;
+	};
+	struct Transition { float probability; State to; };
+
+	struct Game
+	{
+		typedef game::EmptyConfig Config;
+		typedef State State;
+
+		static State initial_state() { return State{ 5, 5 }; }
+		static bool is_terminal_state(const State& s) { return s.hp1 <= 0 || s.hp2 <= 0; }
+		static std::vector<Transition> get_transitions(Config, const State& state)
+		{
+			std::vector<Transition> result;
+			if (is_terminal_state(state)) return result;
+
+			// win, draw, loss version
+			result.push_back({ 1.0f / 3.0f, State{ state.hp1, (unsigned char)(state.hp2 - 1) }, });
+			result.push_back({ 1.0f / 3.0f, State{ (unsigned char)(state.hp1 - 1), (unsigned char)(state.hp2 - 1) }, });
+			result.push_back({ 1.0f / 3.0f, State{ (unsigned char)(state.hp1 - 1), state.hp2 }, });
+
+			game::sanitize_transitions(result);
+			return result;
+		}
+		static float compute_intrinsic_desire(const State& state)
+		{
+			// Player 1 wins if their HP is > 0 and Player 2's HP is 0
+			return state.hp1 != 0 && state.hp2 == 0 ? 1.0f : 0.0f;
+		}
+		static std::string tostr(const State& s) { return "HP1:" + std::to_string(s.hp1) + " HP2:" + std::to_string(s.hp2); }
+	};
+}
 ```
-
-## License
-
-MIT License. See [LICENSE](./LICENSE) for details.
-
-## Contact
-
-For consulting inquiries & offers:
-
-aka.louis [at] outlook [dot] com
