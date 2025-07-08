@@ -21,12 +21,12 @@ export namespace hpgame
 
 	struct Game
 	{
-		typedef game::EmptyConfig config_t;
-		typedef State state_t;
+		typedef game::EmptyConfig Config;
+		typedef State State;
 
 		static State initial_state() { return State{ 5, 5 }; }
 		static bool is_terminal_state(const State& s) { return s.hp1 <= 0 || s.hp2 <= 0; }
-		static std::vector<Transition> get_transitions(config_t, const State& state)
+		static std::vector<Transition> get_transitions(Config, const State& state)
 		{
 			std::vector<Transition> result;
 			if (is_terminal_state(state)) return result;

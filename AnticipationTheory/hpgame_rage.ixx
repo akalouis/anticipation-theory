@@ -56,8 +56,8 @@ export namespace hpgame_rage
 
 	struct Game
 	{
-		typedef Config config_t;
-		typedef State state_t;
+		typedef Config Config;
+		typedef State State;
 
 		static State initial_state() { return State{ 5, 5, 0, 0 }; }
 		static bool is_terminal_state(const State& s) { return s.hp1 <= 0 || s.hp2 <= 0; }

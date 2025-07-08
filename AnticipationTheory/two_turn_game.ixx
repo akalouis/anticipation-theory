@@ -17,8 +17,8 @@ export namespace two_turn_game
 
 	struct Game
 	{
-		typedef game::EmptyConfig config_t;
-		typedef State state_t;
+		typedef game::EmptyConfig Config;
+		typedef State State;
 
 		static State initial_state() { return State{ 0, 0 }; }
 
@@ -65,14 +65,14 @@ export namespace two_turn_game
 
 export namespace game
 {
-	template<typename state_t> void two_turn_dump_most_fun_moments_a12(
-		const std::vector<state_t>& states,
-		std::map<state_t, StateNode>& stateNodes,
-		std::map<state_t, StateNode>& stateNodes2)
+	template<typename State> void two_turn_dump_most_fun_moments_a12(
+		const std::vector<State>& states,
+		std::map<State, StateNode>& stateNodes,
+		std::map<State, StateNode>& stateNodes2)
 	{
-		std::vector<state_t> states_sorted_by_a12 = states;
+		std::vector<State> states_sorted_by_a12 = states;
 		std::sort(states_sorted_by_a12.begin(), states_sorted_by_a12.end(),
-			[&](const state_t& a, const state_t& b)
+			[&](const State& a, const State& b)
 			{
 				return (stateNodes[a].a + stateNodes2[a].a) > (stateNodes[b].a + stateNodes2[b].a);
 			});

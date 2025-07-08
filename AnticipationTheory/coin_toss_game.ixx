@@ -21,8 +21,8 @@ export namespace coin_toss_game
 
     struct Game
     {
-        typedef game::EmptyConfig config_t;
-        typedef State state_t;
+        typedef game::EmptyConfig Config;
+        typedef State State;
 
 		static State initial_state() { return State{ StateCode::Initial }; }
         static bool is_terminal_state(const State& s) { return s.value != StateCode::Initial; }

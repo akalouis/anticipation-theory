@@ -17,8 +17,8 @@ export namespace lanegame
 
 	struct Game
 	{
-		typedef game::EmptyConfig config_t;
-		typedef State state_t;
+		typedef game::EmptyConfig Config;
+		typedef State State;
 
 		static State initial_state() { return State{ 0, 0, 10 }; }
 		static bool is_terminal_state(const State& s) { return s.minions_remaining <= 0; }

@@ -11,19 +11,20 @@ using namespace game;
 int rps_program()
 {
 	auto analysis = analyze<rps_game::Game>();
-	dump_most_fun_moments<rps_game::Game>(analysis);
+	dump_most_engaging_states<rps_game::Game>(analysis);
 	printf("Game design score: %f\n\n\n", analysis.game_design_score);
 	puts("Note: Rock-Paper-Scissors serves as a benchmark for single-turn games with perfect information.\n"
 		"  1. Achieves A1 = 0.471, which is 94.2% of the theoretical maximum (0.5).\n"
 		"  2. Shows zero A2-A5 components, confirming no multi-turn anticipation exists.\n"
 		"  3. Validates our theoretical bounds for single-step binary games.\n"
 		"  4. Demonstrates that classic games can approach mathematical optimality.\n"
-	);	return 0;
+	);
+	return 0;
 }
 int cointoss_program()
 {
 	auto analysis = analyze<coin_toss_game::Game>();
-	dump_most_fun_moments<coin_toss_game::Game>(analysis);
+	dump_most_engaging_states<coin_toss_game::Game>(analysis);
 	printf("Game design score: %f\n\n\n", analysis.game_design_score);
 	puts("Note: Coin toss represents the theoretical optimum for single-turn binary games.\n"
 		"  1. Achieves perfect A1 = 0.5, the mathematical maximum for this game class.\n"
@@ -37,12 +38,12 @@ int hpgame_program()
 {
 	using namespace hpgame;
 
-	auto config = Game::config_t();
+	auto config = Game::Config();
 	auto initial_state = Game::initial_state();
 	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
 
 	printf("Most engaging moments(sorted by sum(A))\n");
-	dump_most_fun_moments<Game>(analysis);
+	dump_most_engaging_states<Game>(analysis);
 
 	printf("Game design score: %f\n", analysis.game_design_score);
 	printf("Game design score(simulated): %f\n", game::compute_gamedesign_score_simulation<Game>(
@@ -63,7 +64,7 @@ int hpgame_interactive_program()
 {
 	using namespace hpgame;
 
-	auto config = Game::config_t();
+	auto config = Game::Config();
 	auto initial_state = Game::initial_state();
 	auto analysis = game::analyze<hpgame::Game>(initial_state, Game::compute_intrinsic_desire, config);
 	auto final_state = game::run<hpgame::Game>(
@@ -73,7 +74,7 @@ int hpgame_interactive_program()
 			printf("Player1.Hp:%d\tPlayer2.Hp:%d\t", s.hp1, s.hp2);
 			printf("Fun:%.2f\n", analysis.stateNodes[s].sum_A());
 
-			auto transitions = Game::get_transitions(Game::config_t(), s);
+			auto transitions = Game::get_transitions(Game::Config(), s);
 			for (size_t i = 0; i < transitions.size(); i++)
 				printf("%lld: %s\n", i, Game::tostr(transitions[i].alias).c_str());
 
@@ -96,7 +97,7 @@ int hpgame_rage_analyze_program()
 	auto initial_state = Game::initial_state();
 	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
 	printf("Most engaging moments(sorted by sum(A))\n");
-	dump_most_fun_moments<Game>(analysis);
+	dump_most_engaging_states<Game>(analysis);
 
 	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score);
 	printf("Game design score(simulated, sum(A1~5)): %f\n",
@@ -264,7 +265,7 @@ int hpgame_rage_optimized_program()
 	auto initial_state = Game::initial_state();
 	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
 	printf("Most engaging moments(sorted by sum(A))\n");
-	dump_most_fun_moments<Game>(analysis);
+	dump_most_engaging_states<Game>(analysis);
 	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score);
 	printf("Game design score(simulated, sum(A1~5)): %f\n", game::compute_gamedesign_score_simulation<Game>(
 		[&](const hpgame_rage::State& s)
