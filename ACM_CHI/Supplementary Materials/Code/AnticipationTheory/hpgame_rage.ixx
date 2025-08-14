@@ -209,8 +209,8 @@ export namespace hpgame_rage
 		}
 		static std::string tostr(const State& s)
 		{
-			return "HP1:" + std::to_string(s.hp1) + " HP2:" + std::to_string(s.hp2) +
-				" Rage1:" + std::to_string(s.rage1) + " Rage2:" + std::to_string(s.rage2);
+			return "P1_HP:" + std::to_string(s.hp1) + " P1_Rage:" + std::to_string(s.rage1) +
+				" P2_HP:" + std::to_string(s.hp2) + " P2_Rage:" + std::to_string(s.rage2);
 		}
 	};
 }

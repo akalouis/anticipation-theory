@@ -10,8 +10,11 @@ int cointoss_program()
 {
 	auto analysis = analyze<coin_toss_game::Game>();
 	dump_most_engaging_states<coin_toss_game::Game>(analysis);
-	printf("Game design score: %f\n\n\n", analysis.game_design_score);
-	puts("Note: Coin toss represents the theoretical optimum for single-turn binary games.\n"
+	printf("Game design score (A1-A5 each): %f, %f, %f, %f, %f\n",
+		analysis.gds_components[0], analysis.gds_components[1], analysis.gds_components[2], analysis.gds_components[3], analysis.gds_components[4]);
+	printf("Game design score (sum(A1-A5)): %f\n", analysis.game_design_score);
+
+	puts("\nNote: Coin toss represents the theoretical optimum for single-turn binary games.\n"
 		"  1. Achieves perfect A1 = 0.5, the mathematical maximum for this game class.\n"
 		"  2. Proves our anticipation bounds through actual implementation.\n"
 		"  3. Establishes the baseline for comparing all single-turn game designs.\n"
@@ -30,14 +33,16 @@ int hpgame_program()
 	printf("Most engaging moments(sorted by sum(A))\n");
 	dump_most_engaging_states<Game>(analysis);
 
-	printf("Game design score: %f\n", analysis.game_design_score);
-	printf("Game design score(simulated): %f\n", game::compute_gamedesign_score_simulation<Game>(
+	printf("Game design score (A1-A5 each): %f, %f, %f, %f, %f\n",
+		analysis.gds_components[0], analysis.gds_components[1], analysis.gds_components[2], analysis.gds_components[3], analysis.gds_components[4]);
+	printf("Game design score (sum(A1-A5)): %f\n", analysis.game_design_score);
+	printf("Game design score (simulated, sum(A1-A5)): %f\n", game::compute_gamedesign_score_simulation<Game>(
 		[&](const State& s)
 		{
 			return analysis.stateNodes[s].sum_A();
 		}, config));
 
-	puts("Note: HpGame serves as a benchmark for 1v1 action-focused games.\n"
+	puts("\nNote: HpGame serves as a benchmark for 1v1 action-focused games.\n"
 		"  1. Most engaging states occur when both players have low HP, least engaging with large HP gaps.\n"
 		"  2. High A1 with low A2-A5 components, confirming immediate tactical focus over strategic depth.\n"
 		"  3. Validates intuitive game design principles through quantitative measurement.\n"
@@ -84,8 +89,10 @@ int hpgame_rage_analyze_program()
 	printf("Most engaging moments(sorted by sum(A))\n");
 	dump_most_engaging_states<Game>(analysis);
 
-	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score);
-	printf("Game design score(simulated, sum(A1~5)): %f\n",
+	printf("Game design score (A1-A5 each): %f, %f, %f, %f, %f\n",
+		analysis.gds_components[0], analysis.gds_components[1], analysis.gds_components[2], analysis.gds_components[3], analysis.gds_components[4]);
+	printf("Game design score (sum(A1-A5)): %f\n", analysis.game_design_score);
+	printf("Game design score (simulated, sum(A1-A5)): %f\n",
 		game::compute_gamedesign_score_simulation<Game>(
 			[&](const hpgame_rage::State& s)
 			{
@@ -93,7 +100,7 @@ int hpgame_rage_analyze_program()
 			}, config
 		));
 
-	puts("Note: HpGame Rage demonstrates novel rage/critical hit mechanics.\n"
+	puts("\nNote: HpGame Rage demonstrates novel rage/critical hit mechanics.\n"
 		"  1. Rage accumulates when dealing or receiving damage, enabling strategic depth.\n"
 		"  2. Critical hits deal additional damage scaled by accumulated rage.\n"
 		"  3. Shows higher A2-A5 components, indicating long-term strategic anticipation.\n"
@@ -187,8 +194,8 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config8);
 
 	// Results table header
-	printf("Config\tCrit%%\tRageSpend\tDmgMult\tOnAttack\tOnReceive\t\tA1~5 Sum\tSimulated\n");
-	printf("------\t-----\t---------\t-------\t--------\t---------\t--------\t--------\t---------\n");
+	printf("Config\tCrit%%\tRageSpend\tDmgMult\tOnAttack\tOnReceive\tA1-A5 Sum\tSimulated\n");
+	printf("------\t-----\t---------\t-------\t--------\t---------\t--------\t--------\n");
 
 	size_t config_index = 1;
 	double best_score = 0.0;
@@ -251,15 +258,17 @@ int hpgame_rage_optimized_program()
 	auto analysis = game::analyze<Game>(initial_state, Game::compute_intrinsic_desire, config, 5);
 	printf("Most engaging moments(sorted by sum(A))\n");
 	dump_most_engaging_states<Game>(analysis);
-	printf("Game design score(sum(A1~5)): %f\n", analysis.game_design_score);
-	printf("Game design score(simulated, sum(A1~5)): %f\n", game::compute_gamedesign_score_simulation<Game>(
+	printf("Game design score (A1-A5 each): %f, %f, %f, %f, %f\n",
+		analysis.gds_components[0], analysis.gds_components[1], analysis.gds_components[2], analysis.gds_components[3], analysis.gds_components[4]);
+	printf("Game design score (sum(A1-A5)): %f\n", analysis.game_design_score);
+	printf("Game design score (simulated, sum(A1-A5)): %f\n", game::compute_gamedesign_score_simulation<Game>(
 		[&](const hpgame_rage::State& s)
 		{
 			return analysis.stateNodes[s].sum_A();
 		}, config
 	));
 
-	puts("Note: `hpgame_rage_optimized` uses parameters algorithmically optimized for Game Design Score (GDS).\n"
+	puts("\nNote: `hpgame_rage_optimized` uses parameters algorithmically optimized for Game Design Score (GDS).\n"
 		"  1. Its GDS is over 50% higher than the `hpgame` baseline.\n"
 		"  2. The optimization was purely data-driven, no subjective parameter tuning was made.\n"
 		"  3. This is the top-performing `HpGame` variant analyzed so far (as of Jul 2025).\n"

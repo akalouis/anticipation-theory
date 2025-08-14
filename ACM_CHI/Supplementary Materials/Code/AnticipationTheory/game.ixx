@@ -60,7 +60,7 @@ export namespace game
 		std::vector<State> states;
 		std::vector<State> states_R;
 		std::map<State, StateNode> stateNodes;
-		double gds_components[MAX_ANTICIPATION_NEST_LEVEL] = { 0.0 }; // game design score components, A1~5
+		double gds_components[MAX_ANTICIPATION_NEST_LEVEL] = { 0.0 }; // game design score components, A1-A5
 		double game_design_score;
 	};
 
@@ -422,6 +422,11 @@ export namespace game
 
 			if (&state - &states_sorted_by_a[0] >= 25) break;
 		}
+
+		// D_global explanation
+		printf("(D_global: propagated desire value based on Player1)\n");
+
+		printf("\n");
 	}
 
 	template<typename transition_t>
