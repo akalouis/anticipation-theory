@@ -19,7 +19,7 @@ The Theory of Anticipation provides a formal language to describe and optimize f
 1.  **Game Model**: The game is represented as a probabilistic graph:
 
       * **States ($s$)**: All possible, discrete game situations.
-      * **Transitions ($P(s \\to s')$**: The probability of moving from one state to another.
+      * **Transitions ($P(s \\to s'))$**: The probability of moving from one state to another.
 
 2.  **Intrinsic Desire ($D\_{local}$)**: The root "seed" desire from which all derived anticipation values are generated. To enable objective analysis, you simply define the ultimate goal (e.g., set the "win condition" state to `1` and all other states to `0`). All other desire and anticipation values for the entire game are then computed automatically from this input.
 
