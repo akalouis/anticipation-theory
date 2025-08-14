@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>HPGAME_RAGE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;font-family:Arial;overflow:hidden;display:flex;justify-content:center;align-items:center;min-height:100vh}
+canvas{border:3px solid #0f0;background:linear-gradient(180deg,#87CEEB 0%,#2F4F2F 70%,#8B4513 100%)}
+.ui{position:absolute;top:10px;left:10px;right:10px;z-index:10;color:#fff;font-weight:bold}
+.player-info{display:flex;justify-content:space-between;font-size:18px;margin-bottom:10px}
+.health-bar{width:280px;height:25px;background:#333;border:2px solid #fff;margin:5px;position:relative}
+.health-fill{height:100%;background:linear-gradient(90deg,#0f0,#ff0,#f00);transition:width .3s;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000;font-size:14px}
+.rage-bar{width:280px;height:20px;background:#333;border:2px solid #f80;margin:5px;position:relative}
+.rage-fill{height:100%;background:linear-gradient(90deg,#f80,#f40);transition:width .3s;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000;font-size:12px}
+.player-stats{display:flex;flex-direction:column}
+.health-bars{display:flex;justify-content:space-between}
+.attack-buttons{position:absolute;bottom:30px;left:20%;transform:translateX(-50%);display:flex;gap:15px}
+.attack-btn{padding:15px 25px;font-size:18px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;color:#fff;transition:all .1s}
+.attack-btn:hover{transform:translateY(-2px)}
+.attack-left{background:linear-gradient(45deg,#f6b,#f85)}
+.attack-right{background:linear-gradient(45deg,#4ec,#4a8)}
+.game-over{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:none;justify-content:center;align-items:center;z-index:1000}
+.game-over-content{background:#222;border:3px solid #fd0;border-radius:15px;padding:40px;text-align:center;color:#fff}
+.game-over-title{font-size:48px;margin-bottom:20px;color:#fd0}
+.restart-btn{padding:15px 30px;font-size:18px;background:linear-gradient(45deg,#4c5,#4a9);color:#fff;border:none;border-radius:10px;cursor:pointer;margin-top:20px}
+.game-title{position:absolute;top:50px;left:50%;transform:translateX(-50%);font-size:16px;color:#fff;font-weight:bold;text-align:center}
+.game-title small{font-size:12px;color:#ffcc00;font-weight:normal}
+.anticipation-panel{position:absolute;top:120px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);border:2px solid #fd0;border-radius:10px;padding:15px;color:#fff;font-size:14px;min-width:400px}
+.anticipation-values{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.anticipation-item{text-align:center;padding:5px;background:rgba(255,215,0,0.1);border-radius:5px}
+.anticipation-sum{text-align:center;font-weight:bold;font-size:16px;color:#fd0;border-top:1px solid #fd0;padding-top:8px}
+</style>
+</head>
+<body>
+<canvas id="canvas" width="800" height="600"></canvas>
+<div class="ui">
+<div class="player-info">
+<div>PLAYER 1</div>
+<div class="game-title">HpGame_Rage | nospend | on_dmg+on_recvdmg | critchance:13% critdmg:(1+rage*2) | GameDesignScore:0.653412<br><small>note: +51.7857% engaging than HpGame</small></div>
+<div>PLAYER 2 (AI)</div>
+</div>
+<div class="health-bars">
+<div class="player-stats">
+<div class="health-bar"><div class="health-fill" id="hp1">5/5</div></div>
+<div class="rage-bar"><div class="rage-fill" id="rage1">Rage: 0</div></div>
+</div>
+<div class="player-stats">
+<div class="health-bar"><div class="health-fill" id="hp2">5/5</div></div>
+<div class="rage-bar"><div class="rage-fill" id="rage2">Rage: 0</div></div>
+</div>
+</div>
+</div>
+
+<div class="anticipation-panel">
+<div class="anticipation-values">
+<div class="anticipation-item">A1: <span id="a1">0.000</span></div>
+<div class="anticipation-item">A2: <span id="a2">0.000</span></div>
+<div class="anticipation-item">A3: <span id="a3">0.000</span></div>
+<div class="anticipation-item">A4: <span id="a4">0.000</span></div>
+<div class="anticipation-item">A5: <span id="a5">0.000</span></div>
+</div>
+<div class="anticipation-sum">THEORETICAL FUN (sum of a1~5): <span id="aSum">0.000</span></div>
+</div>
+
+<div class="attack-buttons">
+<button class="attack-btn attack-right" onclick="attack()">⚔️ ATTACK</button>
+</div>
+<div class="game-over" id="gameOver">
+<div class="game-over-content">
+<div class="game-over-title" id="title">YOU WIN!</div>
+<div id="message">Victory message</div>
+<button class="restart-btn" onclick="restart()">🔄 PLAY AGAIN</button>
+</div>
+</div>
+
+<script>
+
+// Precalculated Anticipation values for HpGame_Rage_optimized
+const ANTICIPATION_TABLE = {
+    // Format: "hp1,hp2,rage1,rage2": [A1,A2,A3,A4,A5,SUM]
+    "5,5,0,0": [0.0603458,0.0191108,0.0245445,0.0241267,0.0349054,0.163033],
+    "4,4,1,1": [0.187379,0.168703,0.195158,0.12563,0.0629306,0.739801],
+    "1,1,2,2": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "3,1,2,3": [0.355766,0.219957,0.0829175,1.26599e-08,1.55276e-15,0.658641],
+    "2,1,3,4": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "1,1,4,5": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "1,3,3,2": [0.25007,0.158716,0.0829175,1.08562e-08,8.88178e-16,0.491703],
+    "1,2,4,3": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "1,1,5,4": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "1,4,2,2": [0.249194,0.143612,0.0869455,0.0352037,4.86819e-09,0.514955],
+    "1,3,3,3": [0.25007,0.158716,0.0829175,1.08562e-08,8.88178e-16,0.491703],
+    "1,2,4,4": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "3,4,2,2": [0.285307,0.309183,0.220862,0.109058,0.0358545,0.960264],
+    "2,4,3,3": [0.312844,0.230975,0.146249,0.0585322,0.0203936,0.768994],
+    "1,4,4,4": [0.249194,0.143612,0.0869455,0.0352037,4.86819e-09,0.514955],
+    "4,1,2,2": [0.352531,0.202934,0.112946,0.0352037,4.86819e-09,0.703615],
+    "3,1,3,3": [0.355766,0.219957,0.0829175,1.26599e-08,1.55276e-15,0.658641],
+    "2,1,4,4": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "1,1,5,5": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "4,3,2,2": [0.281597,0.325695,0.232366,0.11307,0.0369241,0.989653],
+    "3,3,3,3": [0.287873,0.301486,0.18009,0.0682753,0.0226184,0.860343],
+    "2,3,4,4": [0.313816,0.237948,0.114212,0.0453089,6.75941e-09,0.711285],
+    "1,3,5,5": [0.25007,0.158716,0.0829175,1.08562e-08,8.88178e-16,0.491703],
+    "4,2,3,3": [0.302961,0.264127,0.162027,0.0641187,0.0203936,0.813627],
+    "3,2,4,4": [0.307767,0.257463,0.121839,0.0453089,6.75941e-09,0.732378],
+    "2,2,5,5": [0.332613,0.210933,0.0974952,1.41266e-08,8.88178e-16,0.641041],
+    "1,2,6,6": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "4,1,4,4": [0.352531,0.202934,0.112946,0.0352037,4.86819e-09,0.703615],
+    "3,1,5,5": [0.355766,0.219957,0.0829175,1.26599e-08,1.55276e-15,0.658641],
+    "2,1,6,6": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "1,1,7,7": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "4,4,1,2": [0.220027,0.279897,0.243958,0.146621,0.0660375,0.956542],
+    "0,1,2,3": [0,0,0,0,0,0],
+    "3,1,2,4": [0.355766,0.219957,0.0829175,1.26599e-08,1.55276e-15,0.658641],
+    "0,0,3,5": [0,0,0,0,0,0],
+    "2,0,3,6": [0,0,0,0,0,0],
+    "0,1,3,5": [0,0,0,0,0,0],
+    "2,1,3,5": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "0,0,4,6": [0,0,0,0,0,0],
+    "1,0,4,7": [0,0,0,0,0,0],
+    "0,1,4,6": [0,0,0,0,0,0],
+    "1,1,4,6": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "0,0,5,8": [0,0,0,0,0,0],
+    "0,1,5,7": [0,0,0,0,0,0],
+    "0,4,2,3": [0,0,0,0,0,0],
+    "3,4,2,3": [0.285307,0.309183,0.220862,0.109058,0.0358545,0.960264],
+    "0,4,3,4": [0,0,0,0,0,0],
+    "2,4,3,4": [0.312844,0.230975,0.146249,0.0585322,0.0203936,0.768994],
+    "0,4,4,5": [0,0,0,0,0,0],
+    "1,4,4,5": [0.249194,0.143612,0.0869455,0.0352037,4.86819e-09,0.514955],
+    "0,4,5,6": [0,0,0,0,0,0],
+    "4,3,2,3": [0.281597,0.325695,0.232366,0.11307,0.0369241,0.989653],
+    "0,3,3,4": [0,0,0,0,0,0],
+    "3,3,3,4": [0.287873,0.301486,0.18009,0.0682753,0.0226184,0.860343],
+    "0,3,4,5": [0,0,0,0,0,0],
+    "2,3,4,5": [0.313816,0.237948,0.114212,0.0453089,6.75941e-09,0.711285],
+    "0,3,5,6": [0,0,0,0,0,0],
+    "1,3,5,6": [0.25007,0.158716,0.0829175,1.08562e-08,8.88178e-16,0.491703],
+    "0,3,6,7": [0,0,0,0,0,0],
+    "4,2,3,4": [0.302961,0.264127,0.162027,0.0641187,0.0203936,0.813627],
+    "3,0,4,6": [0,0,0,0,0,0],
+    "3,2,4,5": [0.307767,0.257463,0.121839,0.0453089,6.75941e-09,0.732378],
+    "2,0,5,7": [0,0,0,0,0,0],
+    "2,2,5,6": [0.332613,0.210933,0.0974952,1.41266e-08,8.88178e-16,0.641041],
+    "1,0,6,8": [0,0,0,0,0,0],
+    "0,2,6,7": [0,0,0,0,0,0],
+    "1,2,6,7": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "0,0,7,9": [0,0,0,0,0,0],
+    "0,2,7,8": [0,0,0,0,0,0],
+    "4,1,4,5": [0.352531,0.202934,0.112946,0.0352037,4.86819e-09,0.703615],
+    "3,0,5,7": [0,0,0,0,0,0],
+    "3,1,5,6": [0.355766,0.219957,0.0829175,1.26599e-08,1.55276e-15,0.658641],
+    "2,0,6,8": [0,0,0,0,0,0],
+    "2,1,6,7": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "1,0,7,9": [0,0,0,0,0,0],
+    "0,1,7,8": [0,0,0,0,0,0],
+    "1,1,7,8": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "0,0,8,10": [0,0,0,0,0,0],
+    "0,1,8,9": [0,0,0,0,0,0],
+    "4,4,2,1": [0.257442,0.292732,0.253054,0.148334,0.0660375,1.0176],
+    "1,0,3,2": [0,0,0,0,0,0],
+    "1,3,4,2": [0.25007,0.158716,0.0829175,1.08562e-08,8.88178e-16,0.491703],
+    "0,0,5,3": [0,0,0,0,0,0],
+    "0,2,6,3": [0,0,0,0,0,0],
+    "1,0,5,3": [0,0,0,0,0,0],
+    "1,2,5,3": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "0,0,6,4": [0,0,0,0,0,0],
+    "0,1,7,4": [0,0,0,0,0,0],
+    "1,0,6,4": [0,0,0,0,0,0],
+    "1,1,6,4": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "0,0,8,5": [0,0,0,0,0,0],
+    "1,0,7,5": [0,0,0,0,0,0],
+    "3,4,3,2": [0.285307,0.309183,0.220862,0.109058,0.0358545,0.960264],
+    "2,4,4,3": [0.312844,0.230975,0.146249,0.0585322,0.0203936,0.768994],
+    "0,3,6,4": [0,0,0,0,0,0],
+    "1,4,5,4": [0.249194,0.143612,0.0869455,0.0352037,4.86819e-09,0.514955],
+    "0,3,7,5": [0,0,0,0,0,0],
+    "3,0,4,3": [0,0,0,0,0,0],
+    "4,0,3,2": [0,0,0,0,0,0],
+    "4,3,3,2": [0.281597,0.325695,0.232366,0.11307,0.0369241,0.989653],
+    "3,3,4,3": [0.287873,0.301486,0.18009,0.0682753,0.0226184,0.860343],
+    "2,3,5,4": [0.313816,0.237948,0.114212,0.0453089,6.75941e-09,0.711285],
+    "0,2,7,5": [0,0,0,0,0,0],
+    "1,3,6,5": [0.25007,0.158716,0.0829175,1.08562e-08,8.88178e-16,0.491703],
+    "0,2,8,6": [0,0,0,0,0,0],
+    "3,0,5,4": [0,0,0,0,0,0],
+    "4,0,4,3": [0,0,0,0,0,0],
+    "4,2,4,3": [0.302961,0.264127,0.162027,0.0641187,0.0203936,0.813627],
+    "3,2,5,4": [0.307767,0.257463,0.121839,0.0453089,6.75941e-09,0.732378],
+    "2,2,6,5": [0.332613,0.210933,0.0974952,1.41266e-08,8.88178e-16,0.641041],
+    "0,1,8,6": [0,0,0,0,0,0],
+    "1,2,7,6": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "0,1,9,7": [0,0,0,0,0,0],
+    "1,0,8,7": [0,0,0,0,0,0],
+    "2,0,7,6": [0,0,0,0,0,0],
+    "3,0,6,5": [0,0,0,0,0,0],
+    "4,0,5,4": [0,0,0,0,0,0],
+    "4,1,5,4": [0.352531,0.202934,0.112946,0.0352037,4.86819e-09,0.703615],
+    "3,1,6,5": [0.355766,0.219957,0.0829175,1.26599e-08,1.55276e-15,0.658641],
+    "2,1,7,6": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "0,0,9,7": [0,0,0,0,0,0],
+    "1,1,8,7": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "0,0,10,8": [0,0,0,0,0,0],
+    "1,0,9,8": [0,0,0,0,0,0],
+    "2,0,8,7": [0,0,0,0,0,0],
+    "3,0,7,6": [0,0,0,0,0,0],
+    "4,0,6,5": [0,0,0,0,0,0],
+    "4,5,1,1": [0.14524,0.16091,0.196756,0.154311,0.0842775,0.741495],
+    "1,2,2,2": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "3,2,2,3": [0.307767,0.257463,0.121839,0.0453089,6.75941e-09,0.732378],
+    "2,0,3,5": [0,0,0,0,0,0],
+    "0,2,3,4": [0,0,0,0,0,0],
+    "2,2,3,4": [0.332613,0.210933,0.0974952,1.41266e-08,8.88178e-16,0.641041],
+    "1,0,4,6": [0,0,0,0,0,0],
+    "0,2,4,5": [0,0,0,0,0,0],
+    "1,2,4,5": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "0,0,5,7": [0,0,0,0,0,0],
+    "0,2,5,6": [0,0,0,0,0,0],
+    "1,4,3,2": [0.249194,0.143612,0.0869455,0.0352037,4.86819e-09,0.514955],
+    "0,3,5,3": [0,0,0,0,0,0],
+    "1,0,4,3": [0,0,0,0,0,0],
+    "1,5,2,2": [0.249145,0.139677,0.081483,0.0452185,0.0149462,0.530469],
+    "1,0,3,3": [0,0,0,0,0,0],
+    "3,5,2,2": [0.286219,0.307601,0.239805,0.141501,0.0611479,1.03627],
+    "2,0,3,4": [0,0,0,0,0,0],
+    "0,4,4,3": [0,0,0,0,0,0],
+    "0,5,3,3": [0,0,0,0,0,0],
+    "2,5,3,3": [0.313393,0.225508,0.151706,0.082383,0.0291172,0.802108],
+    "0,4,5,4": [0,0,0,0,0,0],
+    "0,5,4,4": [0,0,0,0,0,0],
+    "1,5,4,4": [0.249145,0.139677,0.081483,0.0452185,0.0149462,0.530469],
+    "0,4,6,5": [0,0,0,0,0,0],
+    "0,5,5,5": [0,0,0,0,0,0],
+    "3,0,3,3": [0,0,0,0,0,0],
+    "4,2,2,2": [0.302961,0.264127,0.162027,0.0641187,0.0203936,0.813627],
+    "0,1,4,3": [0,0,0,0,0,0],
+    "0,2,3,3": [0,0,0,0,0,0],
+    "3,2,3,3": [0.307767,0.257463,0.121839,0.0453089,6.75941e-09,0.732378],
+    "5,4,1,1": [0.14472,0.124361,0.193657,0.1564,0.086591,0.705729],
+    "2,1,2,2": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "1,1,3,3": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "4,1,2,3": [0.352531,0.202934,0.112946,0.0352037,4.86819e-09,0.703615],
+    "0,0,3,4": [0,0,0,0,0,0],
+    "3,0,3,5": [0,0,0,0,0,0],
+    "0,1,3,4": [0,0,0,0,0,0],
+    "3,1,3,4": [0.355766,0.219957,0.0829175,1.26599e-08,1.55276e-15,0.658641],
+    "2,0,4,6": [0,0,0,0,0,0],
+    "0,1,4,5": [0,0,0,0,0,0],
+    "2,1,4,5": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "1,0,5,7": [0,0,0,0,0,0],
+    "0,1,5,6": [0,0,0,0,0,0],
+    "1,1,5,6": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "0,0,6,8": [0,0,0,0,0,0],
+    "0,1,6,7": [0,0,0,0,0,0],
+    "2,3,3,2": [0.313816,0.237948,0.114212,0.0453089,6.75941e-09,0.711285],
+    "0,2,5,3": [0,0,0,0,0,0],
+    "1,3,4,3": [0.25007,0.158716,0.0829175,1.08562e-08,8.88178e-16,0.491703],
+    "0,2,6,4": [0,0,0,0,0,0],
+    "1,0,5,4": [0,0,0,0,0,0],
+    "2,0,4,3": [0,0,0,0,0,0],
+    "2,2,4,3": [0.332613,0.210933,0.0974952,1.41266e-08,8.88178e-16,0.641041],
+    "0,1,6,4": [0,0,0,0,0,0],
+    "1,2,5,4": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "0,1,7,5": [0,0,0,0,0,0],
+    "1,0,6,5": [0,0,0,0,0,0],
+    "2,0,5,4": [0,0,0,0,0,0],
+    "2,1,5,4": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "0,0,7,5": [0,0,0,0,0,0],
+    "1,1,6,5": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "0,0,8,6": [0,0,0,0,0,0],
+    "1,0,7,6": [0,0,0,0,0,0],
+    "2,0,6,5": [0,0,0,0,0,0],
+    "2,4,2,2": [0.312844,0.230975,0.146249,0.0585322,0.0203936,0.768994],
+    "1,0,3,4": [0,0,0,0,0,0],
+    "1,4,3,3": [0.249194,0.143612,0.0869455,0.0352037,4.86819e-09,0.514955],
+    "0,0,4,5": [0,0,0,0,0,0],
+    "1,0,4,4": [0,0,0,0,0,0],
+    "2,0,3,3": [0,0,0,0,0,0],
+    "2,3,3,3": [0.313816,0.237948,0.114212,0.0453089,6.75941e-09,0.711285],
+    "1,0,4,5": [0,0,0,0,0,0],
+    "1,3,4,4": [0.25007,0.158716,0.0829175,1.08562e-08,8.88178e-16,0.491703],
+    "0,0,5,6": [0,0,0,0,0,0],
+    "1,0,5,5": [0,0,0,0,0,0],
+    "2,0,4,4": [0,0,0,0,0,0],
+    "2,2,4,4": [0.332613,0.210933,0.0974952,1.41266e-08,8.88178e-16,0.641041],
+    "1,2,5,5": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "4,4,2,2": [0.275445,0.349264,0.288974,0.165344,0.0689213,1.14795],
+    "3,0,3,4": [0,0,0,0,0,0],
+    "0,3,4,3": [0,0,0,0,0,0],
+    "0,4,3,3": [0,0,0,0,0,0],
+    "3,4,3,3": [0.285307,0.309183,0.220862,0.109058,0.0358545,0.960264],
+    "2,0,4,5": [0,0,0,0,0,0],
+    "0,3,5,4": [0,0,0,0,0,0],
+    "0,4,4,4": [0,0,0,0,0,0],
+    "2,4,4,4": [0.312844,0.230975,0.146249,0.0585322,0.0203936,0.768994],
+    "1,0,5,6": [0,0,0,0,0,0],
+    "0,3,6,5": [0,0,0,0,0,0],
+    "0,4,5,5": [0,0,0,0,0,0],
+    "1,4,5,5": [0.249194,0.143612,0.0869455,0.0352037,4.86819e-09,0.514955],
+    "0,0,6,7": [0,0,0,0,0,0],
+    "0,3,7,6": [0,0,0,0,0,0],
+    "0,4,6,6": [0,0,0,0,0,0],
+    "1,0,6,6": [0,0,0,0,0,0],
+    "2,0,5,5": [0,0,0,0,0,0],
+    "3,0,4,4": [0,0,0,0,0,0],
+    "4,0,3,3": [0,0,0,0,0,0],
+    "5,1,2,2": [0.352351,0.197545,0.112802,0.0562573,0.0149462,0.733901],
+    "0,0,4,3": [0,0,0,0,0,0],
+    "0,1,3,3": [0,0,0,0,0,0],
+    "4,1,3,3": [0.352531,0.202934,0.112946,0.0352037,4.86819e-09,0.703615],
+    "0,0,5,4": [0,0,0,0,0,0],
+    "0,1,4,4": [0,0,0,0,0,0],
+    "3,1,4,4": [0.355766,0.219957,0.0829175,1.26599e-08,1.55276e-15,0.658641],
+    "2,1,5,5": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "1,1,6,6": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "5,3,2,2": [0.28181,0.330073,0.26401,0.152828,0.0645555,1.09328],
+    "0,0,3,3": [0,0,0,0,0,0],
+    "4,0,3,4": [0,0,0,0,0,0],
+    "0,2,4,3": [0,0,0,0,0,0],
+    "0,3,3,3": [0,0,0,0,0,0],
+    "4,3,3,3": [0.281597,0.325695,0.232366,0.11307,0.0369241,0.989653],
+    "3,0,4,5": [0,0,0,0,0,0],
+    "0,2,5,4": [0,0,0,0,0,0],
+    "0,3,4,4": [0,0,0,0,0,0],
+    "3,3,4,4": [0.287873,0.301486,0.18009,0.0682753,0.0226184,0.860343],
+    "2,0,5,6": [0,0,0,0,0,0],
+    "0,2,6,5": [0,0,0,0,0,0],
+    "0,3,5,5": [0,0,0,0,0,0],
+    "2,3,5,5": [0.313816,0.237948,0.114212,0.0453089,6.75941e-09,0.711285],
+    "1,0,6,7": [0,0,0,0,0,0],
+    "0,2,7,6": [0,0,0,0,0,0],
+    "0,3,6,6": [0,0,0,0,0,0],
+    "1,3,6,6": [0.25007,0.158716,0.0829175,1.08562e-08,8.88178e-16,0.491703],
+    "0,0,7,8": [0,0,0,0,0,0],
+    "0,2,8,7": [0,0,0,0,0,0],
+    "0,3,7,7": [0,0,0,0,0,0],
+    "1,0,7,7": [0,0,0,0,0,0],
+    "2,0,6,6": [0,0,0,0,0,0],
+    "3,0,5,5": [0,0,0,0,0,0],
+    "4,0,4,4": [0,0,0,0,0,0],
+    "5,0,3,3": [0,0,0,0,0,0],
+    "5,2,3,3": [0.303341,0.261053,0.179356,0.0919158,0.032311,0.867977],
+    "0,0,4,4": [0,0,0,0,0,0],
+    "4,0,4,5": [0,0,0,0,0,0],
+    "0,1,5,4": [0,0,0,0,0,0],
+    "0,2,4,4": [0,0,0,0,0,0],
+    "4,2,4,4": [0.302961,0.264127,0.162027,0.0641187,0.0203936,0.813627],
+    "3,0,5,6": [0,0,0,0,0,0],
+    "0,1,6,5": [0,0,0,0,0,0],
+    "0,2,5,5": [0,0,0,0,0,0],
+    "3,2,5,5": [0.307767,0.257463,0.121839,0.0453089,6.75941e-09,0.732378],
+    "2,0,6,7": [0,0,0,0,0,0],
+    "0,1,7,6": [0,0,0,0,0,0],
+    "0,2,6,6": [0,0,0,0,0,0],
+    "2,2,6,6": [0.332613,0.210933,0.0974952,1.41266e-08,8.88178e-16,0.641041],
+    "1,0,7,8": [0,0,0,0,0,0],
+    "0,1,8,7": [0,0,0,0,0,0],
+    "0,2,7,7": [0,0,0,0,0,0],
+    "1,2,7,7": [0.265317,0.195301,2.53198e-08,1.77636e-15,0,0.460619],
+    "0,0,8,9": [0,0,0,0,0,0],
+    "0,1,9,8": [0,0,0,0,0,0],
+    "0,2,8,8": [0,0,0,0,0,0],
+    "1,0,8,8": [0,0,0,0,0,0],
+    "2,0,7,7": [0,0,0,0,0,0],
+    "3,0,6,6": [0,0,0,0,0,0],
+    "4,0,5,5": [0,0,0,0,0,0],
+    "5,0,4,4": [0,0,0,0,0,0],
+    "5,1,4,4": [0.352351,0.197545,0.112802,0.0562573,0.0149462,0.733901],
+    "0,0,5,5": [0,0,0,0,0,0],
+    "4,0,5,6": [0,0,0,0,0,0],
+    "0,0,6,5": [0,0,0,0,0,0],
+    "0,1,5,5": [0,0,0,0,0,0],
+    "4,1,5,5": [0.352531,0.202934,0.112946,0.0352037,4.86819e-09,0.703615],
+    "0,0,6,6": [0,0,0,0,0,0],
+    "3,0,6,7": [0,0,0,0,0,0],
+    "0,0,7,6": [0,0,0,0,0,0],
+    "0,1,6,6": [0,0,0,0,0,0],
+    "3,1,6,6": [0.355766,0.219957,0.0829175,1.26599e-08,1.55276e-15,0.658641],
+    "0,0,7,7": [0,0,0,0,0,0],
+    "2,0,7,8": [0,0,0,0,0,0],
+    "0,0,8,7": [0,0,0,0,0,0],
+    "0,1,7,7": [0,0,0,0,0,0],
+    "2,1,7,7": [0.409562,0.195301,2.89499e-08,1.77636e-15,0,0.604863],
+    "0,0,8,8": [0,0,0,0,0,0],
+    "1,0,8,9": [0,0,0,0,0,0],
+    "0,0,9,8": [0,0,0,0,0,0],
+    "0,1,8,8": [0,0,0,0,0,0],
+    "1,1,8,8": [0.460006,5.96046e-08,0,0,0,0.460006],
+    "0,0,9,9": [0,0,0,0,0,0],
+    "0,0,9,10": [0,0,0,0,0,0],
+    "0,0,10,9": [0,0,0,0,0,0],
+    "0,0,10,10": [0,0,0,0,0,0],
+    "0,1,9,9": [0,0,0,0,0,0],
+    "1,0,9,9": [0,0,0,0,0,0],
+    "2,0,8,8": [0,0,0,0,0,0],
+    "3,0,7,7": [0,0,0,0,0,0],
+    "4,0,6,6": [0,0,0,0,0,0],
+    "5,0,5,5": [0,0,0,0,0,0],
+};
+
+
+
+function getCurrentAnticipation() {
+    const key = `${gameState.player1.hp},${gameState.player2.hp},${gameState.player1.rage},${gameState.player2.rage}`;
+    return ANTICIPATION_TABLE[key] || [0,0,0,0,0,0];
+}
+
+function updateAnticipationDisplay() {
+    const [A1, A2, A3, A4, A5, SUM] = getCurrentAnticipation();
+    const key = `${gameState.player1.hp},${gameState.player2.hp},${gameState.player1.rage},${gameState.player2.rage}`;
+    
+    document.getElementById('a1').textContent = A1.toFixed(4);
+    document.getElementById('a2').textContent = A2.toFixed(4);
+    document.getElementById('a3').textContent = A3.toFixed(4);
+    document.getElementById('a4').textContent = A4.toFixed(4);
+    document.getElementById('a5').textContent = A5.toFixed(4);
+    document.getElementById('aSum').textContent = SUM.toFixed(4);
+    
+    const sumElement = document.getElementById('aSum');
+    if (SUM > 1.0) {
+        sumElement.style.color = '#ff4444';
+    } else if (SUM > 0.7) {
+        sumElement.style.color = '#ffaa00';
+    } else if (SUM > 0.4) {
+        sumElement.style.color = '#ffff44';
+    } else {
+        sumElement.style.color = '#88ff88';
+    }
+}
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const hp1 = document.getElementById('hp1');
+const hp2 = document.getElementById('hp2');
+const rage1 = document.getElementById('rage1');
+const rage2 = document.getElementById('rage2');
+const gameOver = document.getElementById('gameOver');
+const title = document.getElementById('title');
+const message = document.getElementById('message');
+const audio = new(window.AudioContext || window.webkitAudioContext)();
+
+let gameState = {
+    player1: {x: 150, y: 400, hp: 5, rage: 0, attacking: false, cooldown: 0, lastAction: ''},
+    player2: {x: 550, y: 400, hp: 5, rage: 0, attacking: false, cooldown: 0, lastAction: ''},
+    particles: [],
+    textEffects: [],
+    screenShake: 0,
+    gameOver: false
+};
+
+// HpGame_RAGE Parameters
+const CRITICAL_CHANCE = 0.13;
+const HIT_CHANCE = 0.435; // Calculated to balance probabilities  
+const MISS_CHANCE = 0.435; // Calculated to balance probabilities
+const RAGE_DAMAGE_MULTIPLIER = 2;
+
+// 8 Possible Outcomes (calculated from C++ implementation)
+function calculateOutcomes() {
+    const outcomes = [
+        {name: 'AttackAndMiss', prob: HIT_CHANCE * MISS_CHANCE, p1Action: 'hit', p2Action: 'miss'},
+        {name: 'CriticalAndMiss', prob: CRITICAL_CHANCE * MISS_CHANCE, p1Action: 'crit', p2Action: 'miss'},
+        {name: 'MissAndAttack', prob: MISS_CHANCE * HIT_CHANCE, p1Action: 'miss', p2Action: 'hit'},
+        {name: 'MissAndCritical', prob: MISS_CHANCE * CRITICAL_CHANCE, p1Action: 'miss', p2Action: 'crit'},
+        {name: 'AttackAndAttack', prob: HIT_CHANCE * HIT_CHANCE, p1Action: 'hit', p2Action: 'hit'},
+        {name: 'AttackAndCritical', prob: HIT_CHANCE * CRITICAL_CHANCE, p1Action: 'hit', p2Action: 'crit'},
+        {name: 'CriticalAndAttack', prob: CRITICAL_CHANCE * HIT_CHANCE, p1Action: 'crit', p2Action: 'hit'},
+        {name: 'CriticalAndCritical', prob: CRITICAL_CHANCE * CRITICAL_CHANCE, p1Action: 'crit', p2Action: 'crit'}
+    ];
+    
+    // Normalize probabilities (remove "both miss" and redistribute)
+    const totalProb = outcomes.reduce((sum, outcome) => sum + outcome.prob, 0);
+    outcomes.forEach(outcome => outcome.prob /= totalProb);
+    
+    return outcomes;
+}
+
+function playSound(freq, duration, type = 'sine') {
+    if (audio.state === 'suspended') audio.resume();
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    osc.connect(gain); gain.connect(audio.destination);
+    osc.frequency.value = freq; osc.type = type;
+    gain.gain.setValueAtTime(0.3, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + duration);
+    osc.start(); osc.stop(audio.currentTime + duration);
+}
+
+function createParticles(x, y, color, count = 15) {
+    for (let i = 0; i < count; i++) {
+        gameState.particles.push({
+            x, y, vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
+            life: 40, color, size: Math.random() * 6 + 3
+        });
+    }
+}
+
+function createTextEffect(x, y, text, color = '#fff') {
+    gameState.textEffects.push({x, y, text, color, life: 60});
+}
+
+function drawFighter(player, isP1) {
+    if (gameState.screenShake > 0) {
+        ctx.save();
+        ctx.translate(Math.random() * gameState.screenShake - gameState.screenShake/2, 
+                     Math.random() * gameState.screenShake - gameState.screenShake/2);
+    }
+    
+    // Draw rage aura BEHIND the character
+    if (player.rage > 0) {
+        // Multiple sine waves for complex beautiful flicker
+        const time = Date.now() * 0.002;
+        const primaryFlicker = Math.sin(time * 2) * 0.2 + 0.8; // Main pulse
+        const secondaryFlicker = Math.sin(time * 3.7) * 0.15 + 0.85; // Secondary rhythm
+        const tertiaryFlicker = Math.sin(time * 1.3) * 0.1 + 0.9; // Subtle variation
+        
+        // Base settings
+        const baseAlpha = 0.2;
+        const coreSize = 35 + player.rage * 4;
+        
+        // Beautiful overlapping rings with golden ratio spacing
+        const rings = [
+            {size: coreSize * 0.6, alpha: baseAlpha * 1.0, color: '#ffdd44', flicker: primaryFlicker},
+            {size: coreSize * 0.8, alpha: baseAlpha * 0.7, color: '#ffcc22', flicker: secondaryFlicker},
+            {size: coreSize * 1.0, alpha: baseAlpha * 0.5, color: '#ffbb00', flicker: tertiaryFlicker},
+            {size: coreSize * 1.25, alpha: baseAlpha * 0.35, color: '#ee9900', flicker: primaryFlicker * 0.8},
+            {size: coreSize * 1.55, alpha: baseAlpha * 0.25, color: '#dd8800', flicker: secondaryFlicker * 0.6}
+        ];
+        
+        // Draw rings from largest to smallest for proper layering
+        rings.reverse().forEach((ring, index) => {
+            // Only draw rings if rage level supports them
+            if (index < player.rage + 2) {
+                // Slight positional offset for organic feel
+                const offsetX = Math.sin(time + index) * 1.5;
+                const offsetY = Math.cos(time * 1.4 + index) * 1;
+                
+                ctx.globalAlpha = ring.alpha * ring.flicker;
+                ctx.fillStyle = ring.color;
+                
+                // Create soft edges with gradient
+                const gradient = ctx.createRadialGradient(
+                    player.x + offsetX, player.y - 50 + offsetY, ring.size * 0.3,
+                    player.x + offsetX, player.y - 50 + offsetY, ring.size
+                );
+                gradient.addColorStop(0, ring.color);
+                gradient.addColorStop(0.7, ring.color + '88'); // Semi-transparent
+                gradient.addColorStop(1, ring.color + '00'); // Fully transparent
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(player.x + offsetX, player.y - 50 + offsetY, ring.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+        
+        // Add sparkling particles for higher rage
+        if (player.rage >= 3) {
+            for (let i = 0; i < player.rage - 2; i++) {
+                const sparkleTime = time + i * 2;
+                const sparkleX = player.x + Math.sin(sparkleTime) * (coreSize * 0.8);
+                const sparkleY = player.y - 50 + Math.cos(sparkleTime * 1.3) * (coreSize * 0.8);
+                const sparkleAlpha = (Math.sin(sparkleTime * 6) + 1) * 0.3;
+                
+                ctx.globalAlpha = sparkleAlpha;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        ctx.globalAlpha = 1;
+    }
+    
+    // Draw character ON TOP of aura
+    ctx.fillStyle = isP1 ? '#0af' : '#f44';
+    ctx.fillRect(player.x - 25, player.y - 80, 50, 80);
+    ctx.beginPath();
+    ctx.arc(player.x, player.y - 90, 20, 0, Math.PI * 2);
+    ctx.fill();
+    
+    if (player.attacking) {
+        const ax = isP1 ? player.x + 40 : player.x - 40, ay = player.y - 40;
+        const isCrit = player.lastAction === 'crit';
+        
+        // Different effects for crit vs normal attack
+        ctx.strokeStyle = isCrit ? '#ff0' : '#fff';
+        ctx.lineWidth = isCrit ? 12 : 8;
+        ctx.lineCap = 'round';
+        
+        if (isCrit) {
+            ctx.shadowColor = '#ff0';
+            ctx.shadowBlur = 15;
+        }
+        
+        ctx.beginPath();
+        if (isP1) {
+            ctx.moveTo(ax - 30, ay - 20); ctx.lineTo(ax + 30, ay + 20);
+        } else {
+            ctx.moveTo(ax + 30, ay - 20); ctx.lineTo(ax - 30, ay + 20);
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        
+        // Speed effect lines
+        ctx.strokeStyle = isCrit ? '#fa0' : '#ccc';
+        ctx.lineWidth = isCrit ? 6 : 4;
+        for (let i = 0; i < (isCrit ? 5 : 3); i++) {
+            const offset = (i + 1) * 8;
+            ctx.beginPath();
+            if (isP1) {
+                ctx.moveTo(ax - 30 - offset, ay - 20 - offset);
+                ctx.lineTo(ax + 30 - offset, ay + 20 - offset);
+            } else {
+                ctx.moveTo(ax + 30 + offset, ay - 20 - offset);
+                ctx.lineTo(ax - 30 + offset, ay + 20 - offset);
+            }
+            ctx.stroke();
+        }
+    }
+    
+    // Health bar above fighter
+    const healthWidth = 60 * (player.hp / 5);
+    ctx.fillStyle = '#333';
+    ctx.fillRect(player.x - 30, player.y - 120, 60, 8);
+    ctx.fillStyle = player.hp > 2 ? '#0f0' : player.hp > 1 ? '#ff0' : '#f00';
+    ctx.fillRect(player.x - 30, player.y - 120, healthWidth, 8);
+    
+    // Rage indicator above health bar
+    if (player.rage > 0) {
+        const rageWidth = Math.min(60, player.rage * 10);
+        ctx.fillStyle = '#f80';
+        ctx.fillRect(player.x - 30, player.y - 135, rageWidth, 6);
+    }
+    
+    if (gameState.screenShake > 0) ctx.restore();
+}
+
+function updateEffects() {
+    gameState.particles.forEach((p, i) => {
+        const alpha = p.life / 40;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+        p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+        if (p.life <= 0) gameState.particles.splice(i, 1);
+    });
+    
+    ctx.globalAlpha = 1;
+    gameState.textEffects.forEach((t, i) => {
+        const alpha = t.life / 60;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = t.color;
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(t.text, t.x, t.y);
+        t.life--;
+        if (t.life <= 0) gameState.textEffects.splice(i, 1);
+    });
+    ctx.globalAlpha = 1;
+}
+
+function calculateDamage(attacker, action) {
+    if (action === 'miss') return 0;
+    if (action === 'hit') return 1;
+    if (action === 'crit') return 1 + attacker.rage * RAGE_DAMAGE_MULTIPLIER;
+    return 0;
+}
+
+function selectOutcome() {
+    const outcomes = calculateOutcomes();
+    
+    // Debug: Log probabilities (remove this later)
+    if (Math.random() < 0.01) { // Only log 1% of the time to avoid spam
+        console.log('Outcome probabilities:');
+        outcomes.forEach(o => console.log(`${o.name}: ${(o.prob * 100).toFixed(1)}%`));
+        
+        // Calculate total crit probability for each player
+        const p1CritProb = outcomes.filter(o => o.p1Action === 'crit').reduce((sum, o) => sum + o.prob, 0);
+        const p2CritProb = outcomes.filter(o => o.p2Action === 'crit').reduce((sum, o) => sum + o.prob, 0);
+        console.log(`P1 total crit chance: ${(p1CritProb * 100).toFixed(1)}%`);
+        console.log(`P2 total crit chance: ${(p2CritProb * 100).toFixed(1)}%`);
+    }
+    
+    const rand = Math.random();
+    let cumulative = 0;
+    
+    for (const outcome of outcomes) {
+        cumulative += outcome.prob;
+        if (rand < cumulative) {
+            return outcome;
+        }
+    }
+    return outcomes[outcomes.length - 1]; // fallback
+}
+
+function attack() {
+    if (gameState.gameOver || gameState.player1.cooldown > 0) return;
+    
+    const outcome = selectOutcome();
+    const p1Action = outcome.p1Action;
+    const p2Action = outcome.p2Action;
+    
+    gameState.player1.attacking = gameState.player2.attacking = true;
+    gameState.player1.cooldown = gameState.player2.cooldown = 40;
+    gameState.player1.lastAction = p1Action;
+    gameState.player2.lastAction = p2Action;
+    
+    // Calculate damage
+    const p1Damage = calculateDamage(gameState.player1, p1Action);
+    const p2Damage = calculateDamage(gameState.player2, p2Action);
+    
+    // Apply damage
+    gameState.player2.hp = Math.max(0, gameState.player2.hp - p1Damage);
+    gameState.player1.hp = Math.max(0, gameState.player1.hp - p2Damage);
+    
+    // Update rage (increases on both dealing and receiving damage)
+    if (p1Damage > 0) {
+        gameState.player1.rage++; // dealt damage
+        gameState.player2.rage++; // received damage
+    }
+    if (p2Damage > 0) {
+        gameState.player2.rage++; // dealt damage  
+        gameState.player1.rage++; // received damage
+    }
+    
+    // Create visual effects
+    if (p1Damage > 0) {
+        const color = p1Action === 'crit' ? '#ff0' : '#fa0';
+        createParticles(gameState.player2.x, gameState.player2.y - 40, color, p1Action === 'crit' ? 25 : 20);
+        createTextEffect(gameState.player2.x, gameState.player2.y - 150, 
+                        p1Action === 'crit' ? `CRIT -${p1Damage}` : `-${p1Damage}`, 
+                        p1Action === 'crit' ? '#ff0' : '#f44');
+    }
+    
+    if (p2Damage > 0) {
+        const color = p2Action === 'crit' ? '#ff0' : '#f66';
+        createParticles(gameState.player1.x, gameState.player1.y - 40, color, p2Action === 'crit' ? 25 : 20);
+        createTextEffect(gameState.player1.x, gameState.player1.y - 150, 
+                        p2Action === 'crit' ? `CRIT -${p2Damage}` : `-${p2Damage}`, 
+                        p2Action === 'crit' ? '#ff0' : '#f44');
+    }
+    
+    // Sound effects
+    if (p1Action === 'crit' || p2Action === 'crit') {
+        playSound(1200, 0.2, 'sawtooth'); gameState.screenShake = 20;
+    } else if (p1Damage > 0 || p2Damage > 0) {
+        playSound(800, 0.15, 'square'); gameState.screenShake = 10;
+    }
+    
+    updateDisplay();
+    checkGameOver();
+}
+
+function updateDisplay() {
+    // Health bars
+    const p1Percent = gameState.player1.hp * 20, p2Percent = gameState.player2.hp * 20;
+    hp1.style.width = p1Percent + '%'; hp2.style.width = p2Percent + '%';
+    hp1.textContent = gameState.player1.hp + '/5'; hp2.textContent = gameState.player2.hp + '/5';
+    
+    // Rage bars  
+    const maxRageDisplay = 10; // Max rage to display on bar
+    const rage1Percent = Math.min(gameState.player1.rage / maxRageDisplay * 100, 100);
+    const rage2Percent = Math.min(gameState.player2.rage / maxRageDisplay * 100, 100);
+    rage1.style.width = rage1Percent + '%'; rage2.style.width = rage2Percent + '%';
+    rage1.textContent = `Rage: ${gameState.player1.rage}`; rage2.textContent = `Rage: ${gameState.player2.rage}`;
+    
+    // Update anticipation display
+    updateAnticipationDisplay();
+}
+
+function checkGameOver() {
+    if (gameState.player1.hp <= 0 || gameState.player2.hp <= 0) {
+        gameState.gameOver = true;
+        setTimeout(() => {
+            let resultTitle, resultMessage;
+            if (gameState.player1.hp > gameState.player2.hp) {
+                resultTitle = 'YOU WIN!'; 
+                resultMessage = `Victory! Final Rage: ${gameState.player1.rage}`;
+            } else if (gameState.player2.hp > gameState.player1.hp) {
+                resultTitle = 'YOU LOSE!'; 
+                resultMessage = `Defeated! AI Final Rage: ${gameState.player2.rage}`;
+            } else {
+                resultTitle = 'DRAW!'; 
+                resultMessage = `Both fighters fell! Rage: P1=${gameState.player1.rage}, P2=${gameState.player2.rage}`;
+            }
+            title.textContent = resultTitle; message.textContent = resultMessage;
+            gameOver.style.display = 'flex'; playSound(200, 1.5);
+        }, 1000);
+    }
+}
+
+function restart() {
+    gameState = {
+        player1: {x: 150, y: 400, hp: 5, rage: 0, attacking: false, cooldown: 0, lastAction: ''},
+        player2: {x: 550, y: 400, hp: 5, rage: 0, attacking: false, cooldown: 0, lastAction: ''},
+        particles: [], textEffects: [], screenShake: 0, gameOver: false
+    };
+    gameOver.style.display = 'none'; updateDisplay();
+}
+
+function gameLoop() {
+    if (gameState.player1.cooldown > 0) gameState.player1.cooldown--;
+    if (gameState.player2.cooldown > 0) gameState.player2.cooldown--;
+    if (!gameState.player1.cooldown) gameState.player1.attacking = false;
+    if (!gameState.player2.cooldown) gameState.player2.attacking = false;
+    if (gameState.screenShake > 0) gameState.screenShake--;
+    
+    ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fillRect(0, 0, 800, 600);
+    drawFighter(gameState.player1, true); drawFighter(gameState.player2, false);
+    updateEffects();
+    ctx.strokeStyle = '#654321'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(0, 400); ctx.lineTo(800, 400); ctx.stroke();
+    requestAnimationFrame(gameLoop);
+}
+
+updateDisplay(); gameLoop();
+document.addEventListener('click', () => audio.state === 'suspended' && audio.resume(), {once: true});
+</script>
+</body>
+</html>
