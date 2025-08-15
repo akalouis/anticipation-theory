@@ -54,13 +54,13 @@
 
 \begin{abstract}
   Quantifying player engagement (``fun'') in game design remains a significant challenge.
-  Traditional Flow theory emphasizes the balance between challenge and skill but provides qualitative rather than quantitative guidance, making systematic optimization difficult.
-  Existing approaches rely on subjective evaluation methods that cannot predict engagement levels or establish mathematical optimality conditions.
-  A rigorous quantitative metric is needed to enable systematic design analysis and optimization.
-  In this work, we introduce a metric called local anticipation for a game state, defined as the probability-weighted standard deviation of the desirability values of all possible next states, which captures anticipation of meaningful future events.
+  Historically, engagement in game design has been considered subjective, therefore intractable in a mathematically rigorous way.
+  Traditional Flow theory emphasizes the balance between challenge and skill but provides qualitative rather than quantitative guidance, making algorithmic optimization infeasible.
+  In this work, we introduce a metric called local anticipation for a game state, defined as the probability-weighted standard deviation of the desirability values of all possible next states, capturing the anticipation of meaningful future events.
+  This allows us to make rigorous and objective game design analysis possible.
   Our key contributions are:
   (1) derivation of the metric from observed design principles, yielding the local anticipation formulation;
-  (2) proof that in binary-payoff games local anticipation cannot exceed 0.5; and
+  (2) proof that in binary-payoff games, local anticipation cannot exceed 0.5; and
   (3) demonstration and proof that a fair coin toss achieves this bound and is the optimal single-turn game design for maximizing anticipation.
 \end{abstract}
 
@@ -96,15 +96,13 @@
 Quantifying player engagement in game design remains a fundamental challenge.
 While established theories such as Flow theory~\cite{csikszentmihalyi1990flow} provide qualitative frameworks for understanding optimal experience, they lack the mathematical precision necessary for systematic design optimization and objective comparison of game mechanics.
 
-This limitation constrains design innovation.
-Developers must rely on intuition-based approaches without rigorous methods to evaluate novel concepts.
-Current evaluation techniques require either subjective assessment (which cannot establish mathematical optimality) or full implementation for playtesting (making systematic design exploration prohibitively expensive).
-The absence of objective engagement metrics forces developers to favor established patterns over innovative mechanics.
+While intuition-driven approaches in game design have proven to be valuable strategies for exploring design possibilities, they possess clear limitations, for example, in objective comparison of game mechanics and in algorithmic game design discovery that is beyond human intuition capabilities.
 
-We address this limitation by introducing a mathematical framework that quantifies engagement through \emph{local anticipation}---the probability-weighted standard deviation of outcome desirabilities.
-This provides an objective metric computable directly from game state definitions.
+We enable rigorous analysis by introducing a mathematical framework that quantifies engagement through \emph{local anticipation}---the probability-weighted standard deviation of outcome desirabilities.
+This framework is viable for any game design that can be defined as a state-transition graph.
 
-We demonstrate the framework's analytical power through complete mathematical characterization of single-turn games, deriving fundamental engagement bounds and proving that coin toss represents the optimal single-turn game design for maximizing player anticipation.
+In this work, we contribute to this framework by presenting mathematical proofs on single-turn games, and we conclude that the optimal single-turn game design for maximizing player anticipation is a coin toss.
+Additionally, we study the properties that emerge when this framework is extended algorithmically and suggest directions for future work.
 
 \section{Related Work}
 Flow theory, introduced by Csikszentmihalyi~\cite{csikszentmihalyi1990flow}, identifies optimal experience as arising from the balance between challenge and skill levels.
@@ -115,13 +113,13 @@ GameFlow~\cite{sweetser2005gameflow} adapted flow theory into eight game-specifi
 Subsequent frameworks like PLEX~\cite{arrasvuori2011plex} categorized 22 playful experiences, while the Player Experience Inventory~\cite{abeele2020pxi} provided dual-level measurement validated across multiple studies.
 Despite theoretical sophistication, these approaches remain fundamentally qualitative assessment tools rather than mathematical optimization frameworks.
 
-Existing game metrics typically measure player behavior (retention, progression) or subjective responses (surveys, reviews) rather than fundamental engagement properties.
-While valuable for post-launch optimization, these approaches cannot guide design decisions during development and lack the mathematical rigor necessary for systematic design exploration.
+Existing game metrics typically measure player behavior (retention, progression) or subjective responses (surveys, reviews) rather than rigorous objective scores.
+While valuable, existing metrics have several natural limitations, such as being useful only in post-launch analysis after expensive game development, which has prevented their wide adoption in the gaming industry.
 
-The absence of quantitative frameworks for engagement measurement has left game design without objective tools for evaluating novel mechanics or establishing mathematical optimality conditions, creating a fundamental gap between theoretical understanding and practical design needs.
+Compared to all traditional methods we could find, ours stands out in its objectivity and rigor. (1) provides comparable scores across various game designs, (2) enables algorithmic design optimization, and (3) when expanded algorithmically, the emergent properties of this method show a remarkable match with known insights (for example, the natural derivation of narrative structure when optimizing for maximum engagement).
 
 \section{Derivation}
-The Theory of Anticipation emerges from fundamental observations about the mathematical nature of engagement, establishing why engagement must be modeled through transition variance rather than static state properties.
+The formulation of Local Anticipation emerges from fundamental observations about the nature of engagement. From these principles, it is natural to conclude that engagement must be modeled through transition variance rather than static state properties.
 
 \subsection{Static States Generate No Engagement}
 Consider achieving a highly desirable game state---commanding lead, optimal positioning---then pausing the game indefinitely.
@@ -258,11 +256,11 @@ This decomposition captures respective depths of engagement:
 \end{itemize}
 
 \section{Experiments}
-Note that Game Design Score (GDS) is computed by averaging sum of $A_1$--$A_5$ over all states, weighted by respective state's reachability from the initial state.
+Note that the Game Design Score (GDS) in this paper is computed by averaging the sum of $A_1$--$A_5$ over all states, weighted by respective state's reachability from the initial state.
 
 \subsection{HpGame}
 HpGame models a simplified 1v1 fighting game where each player has health points and can attack with hit/miss probability.
-Players alternate turns until one reaches zero health.
+Players attack simultaneously, and the game ends when one reaches zero health.
 
 \paragraph{Model Definition.}
 Two players with HP $\in \{1,2,3,4,5\}$, with three equally likely transition outcomes per turn:
@@ -274,7 +272,7 @@ Two players with HP $\in \{1,2,3,4,5\}$, with three equally likely transition ou
 Each successful hit deals 1 damage.
 
 \paragraph{Results.}
-The Game Design Score of the HpGame model is calculated from five metrics: $A_1 = 0.176$, $A_2 = 0.135$, $A_3 = 0.072$, $A_4 = 0.030$, and $A_5 = 0.017$, summing to 0.430.
+The Game Design Score of the HpGame model is calculated with the first five anticipation components: $A_1 = 0.176$; $A_2 = 0.135$; $A_3 = 0.072$; $A_4 = 0.030$; and $A_5 = 0.017$, summing to 0.430.
 
 The most engaging moments occur when HP values are close and win probabilities are moderate.
 The highest individual $A_1$ values occur at the state $(1, 1)$ (coin-toss game), as shown in Table~\ref{tab:most_engaging_states}.
@@ -336,8 +334,7 @@ This excluded probability will be evenly distributed to the remaining outcomes.
 \end{align}
 
 \paragraph{Results.}
-TODO:
-The Game Design Score of the HpGame model is calculated from five metrics: $A_1 = 0.xxx$, $A_2 = 0.xxx$, $A_3 = 0.xxx$, $A_4 = 0.xxx$, and $A_5 = 0.xxx$, summing to 0.xxx.
+The Game Design Score of the HpGame model is calculated with the first five anticipation components: $A_1 = 0.199$; $A_2 = 0.157$; $A_3 = 0.105$; $A_4 = 0.057$; and $A_5 = 0.027$, summing to 0.544.
 
 We achieve a significant increase in GDS (0.430 $\rightarrow$ 0.544, +26.5\% improvement).
 The rage system produces significantly higher components like $A_4$ and $A_5$, indicating enhanced multi-turn anticipation depth.
@@ -590,7 +587,7 @@ To date, all issues encountered have been a matter of defining the inputs, not f
 Further scrutiny is nonetheless required to fully validate its robustness.
 
 \section{Supplementary Materials}
-The source code and browser-playable demos for the HpGame and HpGame\_Rage experiments are available in the online version of this paper.
+The source code used in the experiments and browser-playable demos are available in the online version of this paper.
 \anon[
   Additional information has been omitted to preserve anonymity.
 ]{%

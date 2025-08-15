@@ -47,7 +47,7 @@ export namespace hpgame
 		{
 			return state.hp1 != 0 && state.hp2 == 0 ? 1.0f : 0.0f; // player1 alive && player2 dead, win condition
 		}
-		static std::string tostr(const State& s) { return "HP1:" + std::to_string(s.hp1) + " HP2:" + std::to_string(s.hp2); }
+		static std::string tostr(const State& s) { return "P1_HP:" + std::to_string(s.hp1) + " P2_HP:" + std::to_string(s.hp2); }
 		static std::string tostr(TransitionAlias alias)
 		{
 			switch (alias)

@@ -283,9 +283,10 @@ export namespace game
 		result.stateNodes = std::move(resultNodes);
 		//result.game_design_score = game_design_score;
 		for (unsigned long i = 0; i < A_nest_level; i++)
+		{
 			result.gds_components[i] = game_design_scores[i];
-		for (unsigned long i = 0; i < A_nest_level; i++)
 			result.game_design_score += game_design_scores[i];
+		}
 		return result;
 	}
 
@@ -309,7 +310,15 @@ export namespace game
 		{
 			size_t choice;
 			choice = onChoice(current_state);
-			current_state = game_t::get_transitions(config, current_state)[choice].to;
+
+			auto transitions = game_t::get_transitions(config, current_state);
+			if (choice >= transitions.size())
+			{
+				printf("Invalid choice.\n");
+				continue;
+			}
+
+			current_state = transitions[choice].to;
 		}
 
 		return current_state;
