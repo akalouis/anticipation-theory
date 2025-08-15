@@ -309,6 +309,14 @@ export namespace game
 		{
 			size_t choice;
 			choice = onChoice(current_state);
+
+			auto transitions = game_t::get_transitions(config, current_state);
+			if (choice >= transitions.size())
+			{
+				printf("Invalid choice.\n");
+				continue;
+			}
+
 			current_state = game_t::get_transitions(config, current_state)[choice].to;
 		}
 
