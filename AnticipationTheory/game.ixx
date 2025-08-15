@@ -283,9 +283,10 @@ export namespace game
 		result.stateNodes = std::move(resultNodes);
 		//result.game_design_score = game_design_score;
 		for (unsigned long i = 0; i < A_nest_level; i++)
+		{
 			result.gds_components[i] = game_design_scores[i];
-		for (unsigned long i = 0; i < A_nest_level; i++)
 			result.game_design_score += game_design_scores[i];
+		}
 		return result;
 	}
 
