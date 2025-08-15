@@ -196,7 +196,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config8);
 
 	// Results table header
-	printf("Config\tCrit%%\tRageSpend\tDmgMult\tOnAttack\tOnReceive\t\tA1~5 Sum\tSimulated\n");
+	printf("Config\tCrit%%\tRageSpend\tDmgMult\tOnAttack\tOnReceive\tA1~5 Sum\tSimulated\n");
 	printf("------\t-----\t---------\t-------\t--------\t---------\t--------\t--------\t---------\n");
 
 	size_t config_index = 1;
