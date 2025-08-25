@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FIGHTER</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;font-family:Arial;overflow:hidden;display:flex;justify-content:center;align-items:center;min-height:100vh}
+canvas{border:3px solid #0f0;background:linear-gradient(180deg,#87CEEB 0%,#2F4F2F 70%,#8B4513 100%)}
+.ui{position:absolute;top:10px;left:10px;right:10px;z-index:10;color:#fff;font-weight:bold}
+.player-info{display:flex;justify-content:space-between;font-size:18px;margin-bottom:10px}
+.health-bar{width:300px;height:30px;background:#333;border:2px solid #fff;margin:10px;position:relative}
+.health-fill{height:100%;background:linear-gradient(90deg,#0f0,#ff0,#f00);transition:width .3s;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000}
+.health-bars{display:flex;justify-content:space-between}
+.attack-buttons{position:absolute;bottom:30px;left:20%;transform:translateX(-50%);display:flex;gap:15px}
+.attack-btn{padding:15px 25px;font-size:18px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;color:#fff;transition:all .1s}
+.attack-btn:hover{transform:translateY(-2px)}
+.attack-left{background:linear-gradient(45deg,#f6b,#f85)}
+.attack-right{background:linear-gradient(45deg,#4ec,#4a8)}
+.game-over{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:none;justify-content:center;align-items:center;z-index:1000}
+.game-over-content{background:#222;border:3px solid #fd0;border-radius:15px;padding:40px;text-align:center;color:#fff}
+.game-over-title{font-size:48px;margin-bottom:20px;color:#fd0}
+.restart-btn{padding:15px 30px;font-size:18px;background:linear-gradient(45deg,#4c5,#4a9);color:#fff;border:none;border-radius:10px;cursor:pointer;margin-top:20px}
+.game-title{position:absolute;top:50px;left:50%;transform:translateX(-50%);font-size:16px;color:#fff;font-weight:bold}
+</style>
+</head>
+<body>
+<canvas id="canvas" width="800" height="600"></canvas>
+<div class="ui">
+<div class="player-info">
+<div>PLAYER 1</div>
+<div class="game-title">HpGame | GameDesignScore: 0.430483</div>
+<div>PLAYER 2 (AI)</div>
+</div>
+<div class="health-bars">
+<div class="health-bar"><div class="health-fill" id="hp1">5/5</div></div>
+<div class="health-bar"><div class="health-fill" id="hp2">5/5</div></div>
+</div>
+</div>
+<div class="attack-buttons">
+<button class="attack-btn attack-right" onclick="attack()">⚔️ ATTACK</button>
+</div>
+<div class="game-over" id="gameOver">
+<div class="game-over-content">
+<div class="game-over-title" id="title">YOU WIN!</div>
+<div id="message">Victory message</div>
+<button class="restart-btn" onclick="restart()">🔄 PLAY AGAIN</button>
+</div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const hp1 = document.getElementById('hp1');
+const hp2 = document.getElementById('hp2');
+const gameOver = document.getElementById('gameOver');
+const title = document.getElementById('title');
+const message = document.getElementById('message');
+const audio = new(window.AudioContext || window.webkitAudioContext)();
+
+let gameState = {
+    player1: {x: 150, y: 400, hp: 5, attacking: false, cooldown: 0},
+    player2: {x: 550, y: 400, hp: 5, attacking: false, cooldown: 0},
+    particles: [],
+    textEffects: [],
+    screenShake: 0,
+    gameOver: false
+};
+
+function playSound(freq, duration, type = 'sine') {
+    if (audio.state === 'suspended') audio.resume();
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    osc.connect(gain); gain.connect(audio.destination);
+    osc.frequency.value = freq; osc.type = type;
+    gain.gain.setValueAtTime(0.3, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + duration);
+    osc.start(); osc.stop(audio.currentTime + duration);
+}
+
+function createParticles(x, y, color, count = 15) {
+    for (let i = 0; i < count; i++) {
+        gameState.particles.push({
+            x, y, vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
+            life: 40, color, size: Math.random() * 6 + 3
+        });
+    }
+}
+
+function createTextEffect(x, y, text, color = '#fff') {
+    gameState.textEffects.push({x, y, text, color, life: 60});
+}
+
+function drawFighter(player, isP1) {
+    if (gameState.screenShake > 0) {
+        ctx.save();
+        ctx.translate(Math.random() * gameState.screenShake - gameState.screenShake/2, 
+                     Math.random() * gameState.screenShake - gameState.screenShake/2);
+    }
+    
+    ctx.fillStyle = isP1 ? '#0af' : '#f44';
+    ctx.fillRect(player.x - 25, player.y - 80, 50, 80);
+    ctx.beginPath();
+    ctx.arc(player.x, player.y - 90, 20, 0, Math.PI * 2);
+    ctx.fill();
+    
+    if (player.attacking) {
+        const ax = isP1 ? player.x + 40 : player.x - 40, ay = player.y - 40;
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+        ctx.beginPath();
+        if (isP1) {
+            ctx.moveTo(ax - 30, ay - 20); ctx.lineTo(ax + 30, ay + 20);
+        } else {
+            ctx.moveTo(ax + 30, ay - 20); ctx.lineTo(ax - 30, ay + 20);
+        }
+        ctx.stroke();
+        
+        ctx.strokeStyle = '#ccc'; ctx.lineWidth = 4;
+        for (let i = 0; i < 3; i++) {
+            const offset = (i + 1) * 8;
+            ctx.beginPath();
+            if (isP1) {
+                ctx.moveTo(ax - 30 - offset, ay - 20 - offset);
+                ctx.lineTo(ax + 30 - offset, ay + 20 - offset);
+            } else {
+                ctx.moveTo(ax + 30 + offset, ay - 20 - offset);
+                ctx.lineTo(ax - 30 + offset, ay + 20 - offset);
+            }
+            ctx.stroke();
+        }
+        
+        ctx.strokeStyle = '#ff8'; ctx.lineWidth = 3;
+        ctx.beginPath();
+        if (isP1) {
+            ctx.moveTo(ax - 30, ay - 20); ctx.lineTo(ax + 30, ay + 20);
+        } else {
+            ctx.moveTo(ax + 30, ay - 20); ctx.lineTo(ax - 30, ay + 20);
+        }
+        ctx.stroke();
+    }
+    
+    const healthWidth = 60 * (player.hp / 5);
+    ctx.fillStyle = '#333';
+    ctx.fillRect(player.x - 30, player.y - 120, 60, 8);
+    ctx.fillStyle = player.hp > 2 ? '#0f0' : player.hp > 1 ? '#ff0' : '#f00';
+    ctx.fillRect(player.x - 30, player.y - 120, healthWidth, 8);
+    
+    if (gameState.screenShake > 0) ctx.restore();
+}
+
+function updateEffects() {
+    gameState.particles.forEach((p, i) => {
+        const alpha = p.life / 40;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+        p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+        if (p.life <= 0) gameState.particles.splice(i, 1);
+    });
+    
+    ctx.globalAlpha = 1;
+    gameState.textEffects.forEach((t, i) => {
+        const alpha = t.life / 60;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = t.color;
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(t.text, t.x, t.y);
+        t.life--;
+        if (t.life <= 0) gameState.textEffects.splice(i, 1);
+    });
+    ctx.globalAlpha = 1;
+}
+
+function attack() {
+    if (gameState.gameOver || gameState.player1.cooldown > 0) return;
+    
+    const result = Math.random();
+    gameState.player1.attacking = gameState.player2.attacking = true;
+    gameState.player1.cooldown = gameState.player2.cooldown = 40;
+    
+    if (result < 1/3) {
+        gameState.player2.hp = Math.max(0, gameState.player2.hp - 1);
+        createParticles(gameState.player2.x, gameState.player2.y - 40, '#fa0', 20);
+        createTextEffect(gameState.player2.x, gameState.player2.y - 150, '-1', '#f44');
+        playSound(800, 0.15, 'square'); gameState.screenShake = 10;
+    } else if (result < 2/3) {
+        gameState.player1.hp = Math.max(0, gameState.player1.hp - 1);
+        createParticles(gameState.player1.x, gameState.player1.y - 40, '#f66', 20);
+        createTextEffect(gameState.player1.x, gameState.player1.y - 150, '-1', '#f44');
+        playSound(600, 0.15, 'square'); gameState.screenShake = 10;
+    } else {
+        gameState.player1.hp = Math.max(0, gameState.player1.hp - 1);
+        gameState.player2.hp = Math.max(0, gameState.player2.hp - 1);
+        createParticles(gameState.player1.x, gameState.player1.y - 40, '#f66', 15);
+        createParticles(gameState.player2.x, gameState.player2.y - 40, '#fa0', 15);
+        createTextEffect(gameState.player1.x, gameState.player1.y - 150, '-1', '#f44');
+        createTextEffect(gameState.player2.x, gameState.player2.y - 150, '-1', '#f44');
+        playSound(1000, 0.2, 'sawtooth'); gameState.screenShake = 15;
+    }
+    
+    updateHealthDisplay();
+    checkGameOver();
+}
+
+function updateHealthDisplay() {
+    const p1Percent = gameState.player1.hp * 20, p2Percent = gameState.player2.hp * 20;
+    hp1.style.width = p1Percent + '%'; hp2.style.width = p2Percent + '%';
+    hp1.textContent = gameState.player1.hp + '/5'; hp2.textContent = gameState.player2.hp + '/5';
+}
+
+function checkGameOver() {
+    if (gameState.player1.hp <= 0 || gameState.player2.hp <= 0) {
+        gameState.gameOver = true;
+        setTimeout(() => {
+            let resultTitle, resultMessage;
+            if (gameState.player1.hp > gameState.player2.hp) {
+                resultTitle = 'YOU WIN!'; resultMessage = 'Congratulations! You defeated the AI!';
+            } else if (gameState.player2.hp > gameState.player1.hp) {
+                resultTitle = 'YOU LOSE!'; resultMessage = 'The AI was stronger this time. Try again!';
+            } else {
+                resultTitle = 'DRAW!'; resultMessage = 'Both fighters fell at the same time!';
+            }
+            title.textContent = resultTitle; message.textContent = resultMessage;
+            gameOver.style.display = 'flex'; playSound(200, 1.5);
+        }, 1000);
+    }
+}
+
+function restart() {
+    gameState = {
+        player1: {x: 150, y: 400, hp: 5, attacking: false, cooldown: 0},
+        player2: {x: 550, y: 400, hp: 5, attacking: false, cooldown: 0},
+        particles: [], textEffects: [], screenShake: 0, gameOver: false
+    };
+    gameOver.style.display = 'none'; updateHealthDisplay();
+}
+
+function gameLoop() {
+    if (gameState.player1.cooldown > 0) gameState.player1.cooldown--;
+    if (gameState.player2.cooldown > 0) gameState.player2.cooldown--;
+    if (!gameState.player1.cooldown) gameState.player1.attacking = false;
+    if (!gameState.player2.cooldown) gameState.player2.attacking = false;
+    if (gameState.screenShake > 0) gameState.screenShake--;
+    
+    ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fillRect(0, 0, 800, 600);
+    drawFighter(gameState.player1, true); drawFighter(gameState.player2, false);
+    updateEffects();
+    ctx.strokeStyle = '#654321'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(0, 400); ctx.lineTo(800, 400); ctx.stroke();
+    requestAnimationFrame(gameLoop);
+}
+
+updateHealthDisplay(); gameLoop();
+document.addEventListener('click', () => audio.state === 'suspended' && audio.resume(), {once: true});
+</script>
+</body>
+</html>
+
+done hp game

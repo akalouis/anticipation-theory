@@ -133,8 +133,7 @@ int hpgame_rage_compare_mechanics_program()
 	std::vector<Config> configs;
 
 	// Configuration 1: Original (accumulating rage from both attack and defense)
-	Config config1;
-	config1.critical_chance = 0.13f;
+	Config config1(0.13f);
 	config1.rage_spendable = false;
 	config1.rage_dmg_multiplier = 1;
 	config1.rage_increase_on_attack_dmg = true;
@@ -142,8 +141,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config1);
 
 	// Configuration 2: Spendable rage
-	Config config2;
-	config2.critical_chance = 0.13f;
+	Config config2(0.13f);
 	config2.rage_spendable = true;
 	config2.rage_dmg_multiplier = 1;
 	config2.rage_increase_on_attack_dmg = true;
@@ -151,8 +149,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config2);
 
 	// Configuration 3: Offensive rage only (increase only when dealing damage)
-	Config config3;
-	config3.critical_chance = 0.13f;
+	Config config3(0.13f);
 	config3.rage_spendable = false;
 	config3.rage_dmg_multiplier = 1;
 	config3.rage_increase_on_attack_dmg = true;
@@ -160,8 +157,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config3);
 
 	// Configuration 4: Defensive rage only (increase only when receiving damage)
-	Config config4;
-	config4.critical_chance = 0.13f;
+	Config config4(0.13f);
 	config4.rage_spendable = false;
 	config4.rage_dmg_multiplier = 1;
 	config4.rage_increase_on_attack_dmg = false;
@@ -169,8 +165,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config4);
 
 	// Configuration 5: Spendable offensive rage
-	Config config5;
-	config5.critical_chance = 0.13f;
+	Config config5(0.13f);
 	config5.rage_spendable = true;
 	config5.rage_dmg_multiplier = 1;
 	config5.rage_increase_on_attack_dmg = true;
@@ -178,8 +173,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config5);
 
 	// Configuration 6: Spendable defensive rage
-	Config config6;
-	config6.critical_chance = 0.13f;
+	Config config6(0.13f);
 	config6.rage_spendable = true;
 	config6.rage_dmg_multiplier = 1;
 	config6.rage_increase_on_attack_dmg = false;
@@ -187,8 +181,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config6);
 
 	// Configuration 7: Higher damage multiplier
-	Config config7;
-	config7.critical_chance = 0.13f;
+	Config config7(0.13f);
 	config7.rage_spendable = false;
 	config7.rage_dmg_multiplier = 2;
 	config7.rage_increase_on_attack_dmg = true;
@@ -196,8 +189,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config7);
 
 	// Configuration 8: Spendable high multiplier rage
-	Config config8;
-	config8.critical_chance = 0.13f;
+	Config config8(0.13f);
 	config8.rage_spendable = true;
 	config8.rage_dmg_multiplier = 2;
 	config8.rage_increase_on_attack_dmg = true;
@@ -205,7 +197,7 @@ int hpgame_rage_compare_mechanics_program()
 	configs.push_back(config8);
 
 	// Results table header
-	printf("Config\tCrit%%\tRageSpend\tDmgMult\tOnAttack\tOnReceive\t\tA1~5 Sum\tSimulated\n");
+	printf("Config\tCrit%%\tRageSpend\tDmgMult\tOnAttack\tOnReceive\tA1~5 Sum\tSimulated\n");
 	printf("------\t-----\t---------\t-------\t--------\t---------\t--------\t--------\t---------\n");
 
 	size_t config_index = 1;
@@ -259,8 +251,7 @@ int hpgame_rage_compare_mechanics_program()
 int hpgame_rage_optimized_program()
 {
 	using namespace hpgame_rage;
-	Config config;
-	config.critical_chance = 0.13f; // Example critical chance
+	auto config = Game::Config(0.13f); // Example critical chance
 	config.rage_spendable = false; // Rage is not spent on critical hits
 	config.rage_dmg_multiplier = 2; // Rage damage multiplier
 	config.rage_increase_on_attack_dmg = true; // Increase rage when dealing damage
